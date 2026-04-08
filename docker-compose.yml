@@ -1,0 +1,59 @@
+services:
+
+  # ─── SQL Server ────────────────────────────────────────────────────────────
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q 'SELECT 1' -No"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - app-network
+
+  # ─── .NET 9 Web API ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backEnd
+      dockerfile: Dockerfile
+    container_name: backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Server=database,1433;Database=AppDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
+    ports:
+      - "5000:8080"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ─── React Frontend ────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontEnd
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  sqlserver_data:
+
+networks:
+  app-network:
+    driver: bridge

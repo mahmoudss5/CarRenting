@@ -1,0 +1,24 @@
+# ─── .NET ───────────────────────────────────────────────────────────────────
+backEnd/bin/
+backEnd/obj/
+backEnd/*.user
+backEnd/.vs/
+backEnd/*.suo
+
+# ─── Node / React ───────────────────────────────────────────────────────────
+frontEnd/node_modules/
+frontEnd/build/
+frontEnd/.env.local
+frontEnd/.env.development.local
+frontEnd/.env.test.local
+frontEnd/.env.production.local
+frontEnd/npm-debug.log*
+frontEnd/yarn-debug.log*
+frontEnd/yarn-error.log*
+
+# ─── Docker ─────────────────────────────────────────────────────────────────
+.env
+
+# ─── OS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
