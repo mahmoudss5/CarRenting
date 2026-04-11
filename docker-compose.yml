@@ -21,15 +21,15 @@ services:
     networks:
       - app-network
 
-  # ─── .NET 9 Web API ────────────────────────────────────────────────────────
+  # ─── .NET 10 Web API ───────────────────────────────────────────────────────
   backend:
     build:
       context: ./backEnd
       dockerfile: Dockerfile
     container_name: backend
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__DefaultConnection: "Server=database,1433;Database=AppDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=database,1433;Database=CarRentalDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
     ports:
       - "5000:8080"
     depends_on:
