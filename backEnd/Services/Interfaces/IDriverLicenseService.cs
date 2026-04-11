@@ -5,9 +5,9 @@ namespace BackEnd.Services.Interfaces;
 
 public interface IDriverLicenseService
 {
-    Task<ServiceResult<LicenseSubmittedResponseDto>> SubmitLicenseAsync(SubmitLicenseRequestDto dto, long userId);
-    Task<ServiceResult<LicenseResponseDto>> GetMyLicenseAsync(long userId);
-    Task<ServiceResult<object>> GetAllLicensesAsync();
-    Task<ServiceResult<LicenseActionResponseDto>> VerifyLicenseAsync(long licenseId, long adminId);
-    Task<ServiceResult<LicenseActionResponseDto>> RejectLicenseAsync(long licenseId, string reason, long adminId);
+    Task<ResponResult<LicenseSubmittedResponseDto>> SubmitLicenseAsync(SubmitLicenseRequestDto dto, long userId);
+    Task<ResponResult<LicenseResponseDto>> GetMyLicenseAsync(long userId);
+    Task<ResponResult<object>> GetAllLicensesAsync();
+    Task<ResponResult<LicenseActionResponseDto>> VerifyLicenseAsync(long licenseId, long adminId);
+    Task<ResponResult<LicenseActionResponseDto>> RejectLicenseAsync(long licenseId, string reason, long adminId);
 }

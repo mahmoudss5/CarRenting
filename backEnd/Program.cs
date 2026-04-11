@@ -68,8 +68,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
         policy.WithOrigins("http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
 // ─── Repositories ─────────────────────────────────────────────────────────────
@@ -112,5 +112,7 @@ app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok());
 app.MapControllers();
+
+await DbSeeder.SeedAdminAsync(app.Services);
 
 app.Run();

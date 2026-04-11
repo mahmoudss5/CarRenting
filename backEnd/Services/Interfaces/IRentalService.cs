@@ -5,12 +5,12 @@ namespace BackEnd.Services.Interfaces;
 
 public interface IRentalService
 {
-    Task<ServiceResult<RentalCreatedResponseDto>> CreateAsync(CreateRentalRequestDto dto, long userId);
-    Task<ServiceResult<IEnumerable<RentalListItemDto>>> GetMyRentalsAsync(long userId);
-    Task<ServiceResult<RentalDetailDto>> GetByIdAsync(long id, long userId, string userRole);
-    Task<ServiceResult<IEnumerable<OwnerRentalDto>>> GetOwnerRentalsAsync(long userId);
-    Task<ServiceResult<RentalActionResponseDto>> AcceptRentalAsync(long id, long userId);
-    Task<ServiceResult<RentalActionResponseDto>> RejectRentalAsync(long id, string reason, long userId);
-    Task<ServiceResult<RentalActionResponseDto>> CompleteRentalAsync(long id, long userId, string userRole);
-    Task<ServiceResult<object>> CancelRentalAsync(long id, long userId);
+    Task<ResponResult<RentalCreatedResponseDto>> CreateAsync(CreateRentalRequestDto dto, long userId);
+    Task<ResponResult<IEnumerable<RentalListItemDto>>> GetMyRentalsAsync(long userId);
+    Task<ResponResult<RentalDetailDto>> GetByIdAsync(long id, long userId, string userRole);
+    Task<ResponResult<IEnumerable<OwnerRentalDto>>> GetOwnerRentalsAsync(long userId);
+    Task<ResponResult<RentalActionResponseDto>> AcceptRentalAsync(long id, long userId);
+    Task<ResponResult<RentalActionResponseDto>> RejectRentalAsync(long id, string reason, long userId);
+    Task<ResponResult<RentalActionResponseDto>> CompleteRentalAsync(long id, long userId, string userRole);
+    Task<ResponResult<object>> CancelRentalAsync(long id, long userId);
 }

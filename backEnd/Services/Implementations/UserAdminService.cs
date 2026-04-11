@@ -20,7 +20,7 @@ public class UserAdminService : IUserAdminService
         _notifications = notifications;
     }
 
-    public async Task<ServiceResult<IEnumerable<UserSummaryDto>>> GetAllUsersAsync()
+    public async Task<ResponResult<IEnumerable<UserSummaryDto>>> GetAllUsersAsync()
     {
         var users = await _users.GetAllAsync();
         var result = users.Select(u => new UserSummaryDto
@@ -32,15 +32,15 @@ public class UserAdminService : IUserAdminService
             Status = u.AccountStatus,
             CreatedAt = u.CreatedAt
         });
-        return ServiceResult<IEnumerable<UserSummaryDto>>.Ok(result);
+        return ResponResult<IEnumerable<UserSummaryDto>>.Ok(result);
     }
 
-    public async Task<ServiceResult<UserDetailDto>> GetUserByIdAsync(long id)
+    public async Task<ResponResult<UserDetailDto>> GetUserByIdAsync(long id)
     {
         var user = await _users.GetByIdAsync(id);
-        if (user is null) return ServiceResult<UserDetailDto>.NotFound("User not found.");
+        if (user is null) return ResponResult<UserDetailDto>.NotFound("User not found.");
 
-        return ServiceResult<UserDetailDto>.Ok(new UserDetailDto
+        return ResponResult<UserDetailDto>.Ok(new UserDetailDto
         {
             UserId = user.Id,
             FullName = $"{user.FirstName} {user.LastName}".Trim(),
@@ -53,10 +53,10 @@ public class UserAdminService : IUserAdminService
         });
     }
 
-    public async Task<ServiceResult<UserActionResponseDto>> ApproveUserAsync(long id, long adminId)
+    public async Task<ResponResult<UserActionResponseDto>> ApproveUserAsync(long id, long adminId)
     {
         var user = await _users.GetByIdAsync(id);
-        if (user is null) return ServiceResult<UserActionResponseDto>.NotFound("User not found.");
+        if (user is null) return ResponResult<UserActionResponseDto>.NotFound("User not found.");
 
         user.AccountStatus = "Active";
         await _users.UpdateAsync(user);
@@ -73,7 +73,7 @@ public class UserAdminService : IUserAdminService
             $"Your {user.Role} account has been approved.",
             referenceId: user.Id, referenceType: "User");
 
-        return ServiceResult<UserActionResponseDto>.Ok(new UserActionResponseDto
+        return ResponResult<UserActionResponseDto>.Ok(new UserActionResponseDto
         {
             Message = $"{user.Role} account approved successfully.",
             UserId = user.Id,
@@ -81,10 +81,10 @@ public class UserAdminService : IUserAdminService
         });
     }
 
-    public async Task<ServiceResult<UserActionResponseDto>> RejectUserAsync(long id, string reason, long adminId)
+    public async Task<ResponResult<UserActionResponseDto>> RejectUserAsync(long id, string reason, long adminId)
     {
         var user = await _users.GetByIdAsync(id);
-        if (user is null) return ServiceResult<UserActionResponseDto>.NotFound("User not found.");
+        if (user is null) return ResponResult<UserActionResponseDto>.NotFound("User not found.");
 
         user.AccountStatus = "Rejected";
         await _users.UpdateAsync(user);
@@ -102,7 +102,7 @@ public class UserAdminService : IUserAdminService
             $"Your account registration was rejected. Reason: {reason}",
             referenceId: user.Id, referenceType: "User");
 
-        return ServiceResult<UserActionResponseDto>.Ok(new UserActionResponseDto
+        return ResponResult<UserActionResponseDto>.Ok(new UserActionResponseDto
         {
             Message = $"{user.Role} account rejected.",
             UserId = user.Id,
@@ -110,12 +110,21 @@ public class UserAdminService : IUserAdminService
         });
     }
 
-    public async Task<ServiceResult<object>> DeleteUserAsync(long id)
+    public async Task<ResponResult<object>> DeleteUserAsync(long id)
     {
         var user = await _users.GetByIdAsync(id);
-        if (user is null) return ServiceResult<object>.NotFound("User not found.");
+        if (user is null) return ResponResult<object>.NotFound("User not found.");
 
         await _users.DeleteAsync(user);
-        return ServiceResult<object>.Ok(new { message = "User deleted successfully.", user_id = id });
+        return ResponResult<object>.Ok(new { message = "User deleted successfully.", user_id = id });
+    }
+
+    public async Task<ResponResult<object>> promoteToAdminAsync(long id)
+    {
+        var user = await _users.GetByIdAsync(id);
+        if(user is null) return ResponResult<object>.NotFound("User not found.");
+        user.Role = "Admin";
+        await _users.UpdateAsync(user);
+        return ResponResult<object>.Ok(new { message = "User promoted to admin successfully.", user_id = id });
     }
 }

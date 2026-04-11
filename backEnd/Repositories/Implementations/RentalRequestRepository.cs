@@ -35,6 +35,13 @@ public class RentalRequestRepository : IRentalRequestRepository
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
+    public async Task<bool> HasOverlappingAcceptedRentalAsync(long carPostId, DateOnly startDate, DateOnly endDate) =>
+        await _context.RentalRequests
+            .AnyAsync(r => r.CarPostId == carPostId
+                        && r.Status == "Accepted"
+                        && r.StartDate <= endDate
+                        && r.EndDate >= startDate);
+
     public async Task<RentalRequest> CreateAsync(RentalRequest request)
     {
         request.CreatedAt = DateTime.UtcNow;

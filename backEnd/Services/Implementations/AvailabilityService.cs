@@ -20,10 +20,10 @@ public class AvailabilityService : IAvailabilityService
         _carOwners = carOwners;
     }
 
-    public async Task<ServiceResult<CarAvailabilityResponseDto>> GetAvailabilityAsync(long carPostId)
+    public async Task<ResponResult<CarAvailabilityResponseDto>> GetAvailabilityAsync(long carPostId)
     {
         var car = await _carPosts.GetByIdAsync(carPostId);
-        if (car is null) return ServiceResult<CarAvailabilityResponseDto>.NotFound("Car post not found.");
+        if (car is null) return ResponResult<CarAvailabilityResponseDto>.NotFound("Car post not found.");
 
         var entries = await _repo.GetByCarPostIdAsync(carPostId);
         var availability = entries.Select(a => new AvailabilityItemDto
@@ -32,14 +32,14 @@ public class AvailabilityService : IAvailabilityService
             IsAvailable = a.IsAvailable
         }).ToList();
 
-        return ServiceResult<CarAvailabilityResponseDto>.Ok(new CarAvailabilityResponseDto
+        return ResponResult<CarAvailabilityResponseDto>.Ok(new CarAvailabilityResponseDto
         {
             PostId = carPostId,
             Availability = availability
         });
     }
 
-    public async Task<ServiceResult<object>> SetAvailabilityAsync(long carPostId, SetAvailabilityRequestDto dto, long userId)
+    public async Task<ResponResult<object>> SetAvailabilityAsync(long carPostId, SetAvailabilityRequestDto dto, long userId)
     {
         var result = await VerifyOwnership(carPostId, userId);
         if (result is not null) return result;
@@ -52,10 +52,10 @@ public class AvailabilityService : IAvailabilityService
         });
 
         await _repo.UpsertRangeAsync(carPostId, entries);
-        return ServiceResult<object>.Created(new { message = "Availability dates set successfully.", post_id = carPostId });
+        return ResponResult<object>.Created(new { message = "Availability dates set successfully.", post_id = carPostId });
     }
 
-    public async Task<ServiceResult<object>> UpdateAvailabilityAsync(long carPostId, SetAvailabilityRequestDto dto, long userId)
+    public async Task<ResponResult<object>> UpdateAvailabilityAsync(long carPostId, SetAvailabilityRequestDto dto, long userId)
     {
         var result = await VerifyOwnership(carPostId, userId);
         if (result is not null) return result;
@@ -68,17 +68,17 @@ public class AvailabilityService : IAvailabilityService
         });
 
         await _repo.UpsertRangeAsync(carPostId, entries);
-        return ServiceResult<object>.Ok(new { message = "Availability updated successfully.", post_id = carPostId });
+        return ResponResult<object>.Ok(new { message = "Availability updated successfully.", post_id = carPostId });
     }
 
-    private async Task<ServiceResult<object>?> VerifyOwnership(long carPostId, long userId)
+    private async Task<ResponResult<object>?> VerifyOwnership(long carPostId, long userId)
     {
         var car = await _carPosts.GetByIdAsync(carPostId);
-        if (car is null) return ServiceResult<object>.NotFound("Car post not found.");
+        if (car is null) return ResponResult<object>.NotFound("Car post not found.");
 
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null || car.OwnerId != owner.Id)
-            return ServiceResult<object>.Forbidden("You can only manage availability for your own cars.");
+            return ResponResult<object>.Forbidden("You can only manage availability for your own cars.");
 
         return null;
     }

@@ -25,7 +25,7 @@ public class CarPostService : ICarPostService
         _notifications = notifications;
     }
 
-    public async Task<ServiceResult<object>> GetActiveListingsAsync(int page, int pageSize)
+    public async Task<ResponResult<object>> GetActiveListingsAsync(int page, int pageSize)
     {
         var cars = await _carPosts.GetActiveListingsAsync(page, pageSize);
         var total = await _carPosts.CountActiveListingsAsync();
@@ -37,18 +37,18 @@ public class CarPostService : ICarPostService
             items.Add(MapToListItem(c, rating));
         }
 
-        return ServiceResult<object>.Ok(new { cars = items, total, page });
+        return ResponResult<object>.Ok(new { cars = items, total, page });
     }
 
-    public async Task<ServiceResult<CarDetailDto>> GetByIdAsync(long id)
+    public async Task<ResponResult<CarDetailDto>> GetByIdAsync(long id)
     {
         var car = await _carPosts.GetByIdWithDetailsAsync(id);
-        if (car is null) return ServiceResult<CarDetailDto>.NotFound("Car post not found.");
+        if (car is null) return ResponResult<CarDetailDto>.NotFound("Car post not found.");
 
-        return ServiceResult<CarDetailDto>.Ok(MapToDetail(car));
+        return ResponResult<CarDetailDto>.Ok(MapToDetail(car));
     }
 
-    public async Task<ServiceResult<object>> SearchAsync(CarSearchQueryDto query)
+    public async Task<ResponResult<object>> SearchAsync(CarSearchQueryDto query)
     {
         var cars = await _carPosts.SearchAsync(query.Type, query.Brand, query.Location,
             query.MinPrice, query.MaxPrice, query.Page, query.PageSize);
@@ -62,13 +62,13 @@ public class CarPostService : ICarPostService
             items.Add(MapToListItem(c, rating));
         }
 
-        return ServiceResult<object>.Ok(new { results = items, total });
+        return ResponResult<object>.Ok(new { results = items, total });
     }
 
-    public async Task<ServiceResult<CarPostCreatedDto>> CreateAsync(CreateCarPostRequestDto dto, long userId)
+    public async Task<ResponResult<CarPostCreatedDto>> CreateAsync(CreateCarPostRequestDto dto, long userId)
     {
         var owner = await _carOwners.GetByUserIdAsync(userId);
-        if (owner is null) return ServiceResult<CarPostCreatedDto>.Forbidden("Only Car Owners can create posts.");
+        if (owner is null) return ResponResult<CarPostCreatedDto>.Forbidden("Only Car Owners can create posts.");
 
         var car = new CarPost
         {
@@ -88,7 +88,7 @@ public class CarPostService : ICarPostService
 
         car = await _carPosts.CreateAsync(car);
 
-        return ServiceResult<CarPostCreatedDto>.Created(new CarPostCreatedDto
+        return ResponResult<CarPostCreatedDto>.Created(new CarPostCreatedDto
         {
             Message = "Car post created. Awaiting admin approval.",
             Post = new CarPostSummaryDto
@@ -102,14 +102,14 @@ public class CarPostService : ICarPostService
         });
     }
 
-    public async Task<ServiceResult<CarPostUpdatedDto>> UpdateAsync(long id, UpdateCarPostRequestDto dto, long userId)
+    public async Task<ResponResult<CarPostUpdatedDto>> UpdateAsync(long id, UpdateCarPostRequestDto dto, long userId)
     {
         var car = await _carPosts.GetByIdAsync(id);
-        if (car is null) return ServiceResult<CarPostUpdatedDto>.NotFound("Car post not found.");
+        if (car is null) return ResponResult<CarPostUpdatedDto>.NotFound("Car post not found.");
 
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null || car.OwnerId != owner.Id)
-            return ServiceResult<CarPostUpdatedDto>.Forbidden("You can only update your own posts.");
+            return ResponResult<CarPostUpdatedDto>.Forbidden("You can only update your own posts.");
 
         if (dto.Title is not null) car.Title = dto.Title;
         if (dto.Description is not null) car.Description = dto.Description;
@@ -119,7 +119,7 @@ public class CarPostService : ICarPostService
 
         await _carPosts.UpdateAsync(car);
 
-        return ServiceResult<CarPostUpdatedDto>.Ok(new CarPostUpdatedDto
+        return ResponResult<CarPostUpdatedDto>.Ok(new CarPostUpdatedDto
         {
             Message = "Car post updated successfully.",
             Post = new CarPostUpdateResultDto
@@ -133,29 +133,29 @@ public class CarPostService : ICarPostService
         });
     }
 
-    public async Task<ServiceResult<object>> DeleteAsync(long id, long userId, string userRole)
+    public async Task<ResponResult<object>> DeleteAsync(long id, long userId, string userRole)
     {
         var car = await _carPosts.GetByIdAsync(id);
-        if (car is null) return ServiceResult<object>.NotFound("Car post not found.");
+        if (car is null) return ResponResult<object>.NotFound("Car post not found.");
 
         if (userRole != "Admin")
         {
             var owner = await _carOwners.GetByUserIdAsync(userId);
             if (owner is null || car.OwnerId != owner.Id)
-                return ServiceResult<object>.Forbidden("You can only delete your own posts.");
+                return ResponResult<object>.Forbidden("You can only delete your own posts.");
         }
 
         if (car.CarStatus == "Rented")
-            return ServiceResult<object>.Forbidden("Cannot delete a car that is currently rented.");
+            return ResponResult<object>.Forbidden("Cannot delete a car that is currently rented.");
 
         await _carPosts.DeleteAsync(car);
-        return ServiceResult<object>.Ok(new { message = "Car post deleted successfully.", post_id = id });
+        return ResponResult<object>.Ok(new { message = "Car post deleted successfully.", post_id = id });
     }
 
-    public async Task<ServiceResult<IEnumerable<OwnerCarDto>>> GetOwnerCarsAsync(long userId)
+    public async Task<ResponResult<IEnumerable<OwnerCarDto>>> GetOwnerCarsAsync(long userId)
     {
         var owner = await _carOwners.GetByUserIdAsync(userId);
-        if (owner is null) return ServiceResult<IEnumerable<OwnerCarDto>>.Forbidden("Only Car Owners can access this.");
+        if (owner is null) return ResponResult<IEnumerable<OwnerCarDto>>.Forbidden("Only Car Owners can access this.");
 
         var cars = await _carPosts.GetByOwnerIdAsync(owner.Id);
         var result = cars.Select(c => new OwnerCarDto
@@ -168,10 +168,10 @@ public class CarPostService : ICarPostService
             CreatedAt = c.CreatedAt
         });
 
-        return ServiceResult<IEnumerable<OwnerCarDto>>.Ok(result);
+        return ResponResult<IEnumerable<OwnerCarDto>>.Ok(result);
     }
 
-    public async Task<ServiceResult<object>> GetPendingCarsAsync()
+    public async Task<ResponResult<object>> GetPendingCarsAsync()
     {
         var cars = await _carPosts.GetPendingAsync();
         var items = cars.Select(c => new PendingCarDto
@@ -186,13 +186,13 @@ public class CarPostService : ICarPostService
             CreatedAt = c.CreatedAt
         }).ToList();
 
-        return ServiceResult<object>.Ok(new { pending_cars = items, total = items.Count });
+        return ResponResult<object>.Ok(new { pending_cars = items, total = items.Count });
     }
 
-    public async Task<ServiceResult<AdminCarActionResponseDto>> ApproveCarAsync(long id, long adminId)
+    public async Task<ResponResult<AdminCarActionResponseDto>> ApproveCarAsync(long id, long adminId)
     {
         var car = await _carPosts.GetByIdAsync(id);
-        if (car is null) return ServiceResult<AdminCarActionResponseDto>.NotFound("Car post not found.");
+        if (car is null) return ResponResult<AdminCarActionResponseDto>.NotFound("Car post not found.");
 
         car.PostStatus = "Active";
         await _carPosts.UpdateAsync(car);
@@ -209,7 +209,7 @@ public class CarPostService : ICarPostService
             $"Your car post '{car.Title}' has been approved and is now listed.",
             referenceId: car.Id, referenceType: "CarPost");
 
-        return ServiceResult<AdminCarActionResponseDto>.Ok(new AdminCarActionResponseDto
+        return ResponResult<AdminCarActionResponseDto>.Ok(new AdminCarActionResponseDto
         {
             Message = "Car post approved and is now listed.",
             PostId = car.Id,
@@ -217,10 +217,10 @@ public class CarPostService : ICarPostService
         });
     }
 
-    public async Task<ServiceResult<AdminCarActionResponseDto>> RejectCarAsync(long id, string reason, long adminId)
+    public async Task<ResponResult<AdminCarActionResponseDto>> RejectCarAsync(long id, string reason, long adminId)
     {
         var car = await _carPosts.GetByIdAsync(id);
-        if (car is null) return ServiceResult<AdminCarActionResponseDto>.NotFound("Car post not found.");
+        if (car is null) return ResponResult<AdminCarActionResponseDto>.NotFound("Car post not found.");
 
         car.PostStatus = "Rejected";
         await _carPosts.UpdateAsync(car);
@@ -238,7 +238,7 @@ public class CarPostService : ICarPostService
             $"Your car post '{car.Title}' was rejected. Reason: {reason}",
             referenceId: car.Id, referenceType: "CarPost");
 
-        return ServiceResult<AdminCarActionResponseDto>.Ok(new AdminCarActionResponseDto
+        return ResponResult<AdminCarActionResponseDto>.Ok(new AdminCarActionResponseDto
         {
             Message = "Car post rejected.",
             PostId = car.Id,

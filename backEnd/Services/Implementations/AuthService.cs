@@ -22,13 +22,13 @@ public class AuthService : IAuthService
         _tokenService = tokenService;
     }
 
-    public async Task<ServiceResult<RegisterResponseDto>> RegisterAsync(RegisterRequestDto dto)
+    public async Task<ResponResult<RegisterResponseDto>> RegisterAsync(RegisterRequestDto dto)
     {
         if (dto.Role != "CarOwner" && dto.Role != "Renter")
-            return ServiceResult<RegisterResponseDto>.Fail("Role must be 'CarOwner' or 'Renter'.");
+            return ResponResult<RegisterResponseDto>.Fail("Role must be 'CarOwner' or 'Renter'.");
 
         if (await _users.ExistsByEmailAsync(dto.Email))
-            return ServiceResult<RegisterResponseDto>.Fail("Email is already registered.");
+            return ResponResult<RegisterResponseDto>.Fail("Email is already registered.");
 
         var parts = dto.FullName.Trim().Split(' ', 2);
         var user = new User
@@ -48,38 +48,38 @@ public class AuthService : IAuthService
         else
             await _renters.CreateAsync(new Renter { UserId = user.Id });
 
-        return ServiceResult<RegisterResponseDto>.Created(new RegisterResponseDto
+        return ResponResult<RegisterResponseDto>.Created(new RegisterResponseDto
         {
             Message = "Account created successfully. Awaiting admin approval.",
             User = MapToAuthDto(user)
         });
     }
 
-    public async Task<ServiceResult<LoginResponseDto>> LoginAsync(LoginRequestDto dto)
+    public async Task<ResponResult<LoginResponseDto>> LoginAsync(LoginRequestDto dto)
     {
         var user = await _users.GetByEmailAsync(dto.Email);
         if (user is null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            return ServiceResult<LoginResponseDto>.Fail("Invalid email or password.", 401);
+            return ResponResult<LoginResponseDto>.Fail("Invalid email or password.", 401);
 
         if (user.AccountStatus == "Suspended")
-            return ServiceResult<LoginResponseDto>.Forbidden("Your account has been suspended.");
+            return ResponResult<LoginResponseDto>.Forbidden("Your account has been suspended.");
 
         if (user.AccountStatus == "Rejected")
-            return ServiceResult<LoginResponseDto>.Forbidden("Your account registration was rejected.");
+            return ResponResult<LoginResponseDto>.Forbidden("Your account registration was rejected.");
 
-        return ServiceResult<LoginResponseDto>.Ok(new LoginResponseDto
+        return ResponResult<LoginResponseDto>.Ok(new LoginResponseDto
         {
             Token = _tokenService.GenerateToken(user),
             User = MapToAuthDto(user)
         });
     }
 
-    public async Task<ServiceResult<MeResponseDto>> GetMeAsync(long userId)
+    public async Task<ResponResult<MeResponseDto>> GetMeAsync(long userId)
     {
         var user = await _users.GetByIdAsync(userId);
-        if (user is null) return ServiceResult<MeResponseDto>.NotFound("User not found.");
+        if (user is null) return ResponResult<MeResponseDto>.NotFound("User not found.");
 
-        return ServiceResult<MeResponseDto>.Ok(new MeResponseDto
+        return ResponResult<MeResponseDto>.Ok(new MeResponseDto
         {
             UserId = user.Id,
             FullName = $"{user.FirstName} {user.LastName}".Trim(),

@@ -5,7 +5,7 @@ namespace BackEnd.Services.Interfaces;
 
 public interface IAvailabilityService
 {
-    Task<ServiceResult<CarAvailabilityResponseDto>> GetAvailabilityAsync(long carPostId);
-    Task<ServiceResult<object>> SetAvailabilityAsync(long carPostId, SetAvailabilityRequestDto dto, long userId);
-    Task<ServiceResult<object>> UpdateAvailabilityAsync(long carPostId, SetAvailabilityRequestDto dto, long userId);
+    Task<ResponResult<CarAvailabilityResponseDto>> GetAvailabilityAsync(long carPostId);
+    Task<ResponResult<object>> SetAvailabilityAsync(long carPostId, SetAvailabilityRequestDto dto, long userId);
+    Task<ResponResult<object>> UpdateAvailabilityAsync(long carPostId, SetAvailabilityRequestDto dto, long userId);
 }

@@ -5,7 +5,7 @@ namespace BackEnd.Services.Interfaces;
 
 public interface IAuthService
 {
-    Task<ServiceResult<RegisterResponseDto>> RegisterAsync(RegisterRequestDto dto);
-    Task<ServiceResult<LoginResponseDto>> LoginAsync(LoginRequestDto dto);
-    Task<ServiceResult<MeResponseDto>> GetMeAsync(long userId);
+    Task<ResponResult<RegisterResponseDto>> RegisterAsync(RegisterRequestDto dto);
+    Task<ResponResult<LoginResponseDto>> LoginAsync(LoginRequestDto dto);
+    Task<ResponResult<MeResponseDto>> GetMeAsync(long userId);
 }

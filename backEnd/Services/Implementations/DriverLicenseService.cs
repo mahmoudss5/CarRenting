@@ -22,14 +22,14 @@ public class DriverLicenseService : IDriverLicenseService
         _notifications = notifications;
     }
 
-    public async Task<ServiceResult<LicenseSubmittedResponseDto>> SubmitLicenseAsync(SubmitLicenseRequestDto dto, long userId)
+    public async Task<ResponResult<LicenseSubmittedResponseDto>> SubmitLicenseAsync(SubmitLicenseRequestDto dto, long userId)
     {
         var renter = await _renters.GetByUserIdAsync(userId);
-        if (renter is null) return ServiceResult<LicenseSubmittedResponseDto>.Forbidden("Only Renters can submit a license.");
+        if (renter is null) return ResponResult<LicenseSubmittedResponseDto>.Forbidden("Only Renters can submit a license.");
 
         var existing = await _licenses.GetByRenterIdAsync(renter.Id);
         if (existing is not null)
-            return ServiceResult<LicenseSubmittedResponseDto>.Fail("A license is already submitted.");
+            return ResponResult<LicenseSubmittedResponseDto>.Fail("A license is already submitted.");
 
         var license = new DriverLicense
         {
@@ -42,25 +42,25 @@ public class DriverLicenseService : IDriverLicenseService
 
         license = await _licenses.CreateAsync(license);
 
-        return ServiceResult<LicenseSubmittedResponseDto>.Created(new LicenseSubmittedResponseDto
+        return ResponResult<LicenseSubmittedResponseDto>.Created(new LicenseSubmittedResponseDto
         {
             Message = "License submitted successfully. Awaiting verification.",
             License = MapToDto(license)
         });
     }
 
-    public async Task<ServiceResult<LicenseResponseDto>> GetMyLicenseAsync(long userId)
+    public async Task<ResponResult<LicenseResponseDto>> GetMyLicenseAsync(long userId)
     {
         var renter = await _renters.GetByUserIdAsync(userId);
-        if (renter is null) return ServiceResult<LicenseResponseDto>.Forbidden("Only Renters can access this.");
+        if (renter is null) return ResponResult<LicenseResponseDto>.Forbidden("Only Renters can access this.");
 
         var license = await _licenses.GetByRenterIdAsync(renter.Id);
-        if (license is null) return ServiceResult<LicenseResponseDto>.NotFound("No license submitted yet.");
+        if (license is null) return ResponResult<LicenseResponseDto>.NotFound("No license submitted yet.");
 
-        return ServiceResult<LicenseResponseDto>.Ok(MapToDto(license));
+        return ResponResult<LicenseResponseDto>.Ok(MapToDto(license));
     }
 
-    public async Task<ServiceResult<object>> GetAllLicensesAsync()
+    public async Task<ResponResult<object>> GetAllLicensesAsync()
     {
         var licenses = await _licenses.GetAllAsync();
         var items = licenses.Select(l => new AdminLicenseItemDto
@@ -74,13 +74,13 @@ public class DriverLicenseService : IDriverLicenseService
             SubmittedAt = l.CreatedAt
         }).ToList();
 
-        return ServiceResult<object>.Ok(new { licenses = items, total = items.Count });
+        return ResponResult<object>.Ok(new { licenses = items, total = items.Count });
     }
 
-    public async Task<ServiceResult<LicenseActionResponseDto>> VerifyLicenseAsync(long licenseId, long adminId)
+    public async Task<ResponResult<LicenseActionResponseDto>> VerifyLicenseAsync(long licenseId, long adminId)
     {
         var license = await _licenses.GetByIdAsync(licenseId);
-        if (license is null) return ServiceResult<LicenseActionResponseDto>.NotFound("License not found.");
+        if (license is null) return ResponResult<LicenseActionResponseDto>.NotFound("License not found.");
 
         license.VerificationStatus = "Verified";
         license.VerifiedAt = DateTime.UtcNow;
@@ -99,7 +99,7 @@ public class DriverLicenseService : IDriverLicenseService
             "Your driver license has been verified. You can now book cars.",
             referenceId: licenseId);
 
-        return ServiceResult<LicenseActionResponseDto>.Ok(new LicenseActionResponseDto
+        return ResponResult<LicenseActionResponseDto>.Ok(new LicenseActionResponseDto
         {
             Message = "Driver license verified successfully.",
             LicenseId = licenseId,
@@ -107,10 +107,10 @@ public class DriverLicenseService : IDriverLicenseService
         });
     }
 
-    public async Task<ServiceResult<LicenseActionResponseDto>> RejectLicenseAsync(long licenseId, string reason, long adminId)
+    public async Task<ResponResult<LicenseActionResponseDto>> RejectLicenseAsync(long licenseId, string reason, long adminId)
     {
         var license = await _licenses.GetByIdAsync(licenseId);
-        if (license is null) return ServiceResult<LicenseActionResponseDto>.NotFound("License not found.");
+        if (license is null) return ResponResult<LicenseActionResponseDto>.NotFound("License not found.");
 
         license.VerificationStatus = "Rejected";
         await _licenses.UpdateAsync(license);
@@ -124,7 +124,7 @@ public class DriverLicenseService : IDriverLicenseService
             Reason = reason
         });
 
-        return ServiceResult<LicenseActionResponseDto>.Ok(new LicenseActionResponseDto
+        return ResponResult<LicenseActionResponseDto>.Ok(new LicenseActionResponseDto
         {
             Message = "Driver license rejected.",
             LicenseId = licenseId,

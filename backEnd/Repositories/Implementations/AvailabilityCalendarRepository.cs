@@ -44,4 +44,46 @@ public class AvailabilityCalendarRepository : IAvailabilityCalendarRepository
         }
         await _context.SaveChangesAsync();
     }
+
+    // Returns true if ANY calendar entry in the range is explicitly marked unavailable.
+    // Dates not present in the calendar are considered available (owner hasn't blocked them).
+    public async Task<bool> HasUnavailableDateInRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate) =>
+        await _context.AvailabilityCalendars
+            .AnyAsync(a => a.CarPostId == carPostId
+                        && a.CalendarDate >= startDate
+                        && a.CalendarDate <= endDate
+                        && !a.IsAvailable);
+
+    // Marks every date in [startDate, endDate] as unavailable (upsert).
+    public async Task BlockDatesRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate)
+    {
+        var now = DateTime.UtcNow;
+        var current = startDate;
+        while (current <= endDate)
+        {
+            var existing = await _context.AvailabilityCalendars
+                .FirstOrDefaultAsync(a => a.CarPostId == carPostId && a.CalendarDate == current);
+
+            if (existing is null)
+            {
+                _context.AvailabilityCalendars.Add(new AvailabilityCalendar
+                {
+                    CarPostId = carPostId,
+                    CalendarDate = current,
+                    IsAvailable = false,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+            }
+            else
+            {
+                existing.IsAvailable = false;
+                existing.UpdatedAt = now;
+            }
+
+            current = current.AddDays(1);
+        }
+
+        await _context.SaveChangesAsync();
+    }
 }

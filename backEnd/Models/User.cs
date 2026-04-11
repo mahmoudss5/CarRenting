@@ -1,5 +1,6 @@
 namespace BackEnd.Models;
 
+// user should be able to have multiple roles so we need to fiex that here and in the database aslo
 public class User
 {
     public long Id { get; set; }

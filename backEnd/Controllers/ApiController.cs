@@ -10,7 +10,7 @@ public abstract class ApiController : ControllerBase
     protected long CurrentUserId => User.GetUserId();
     protected string CurrentUserRole => User.GetRole();
 
-    protected IActionResult FromResult<T>(ServiceResult<T> result)
+    protected IActionResult FromResult<T>(ResponResult<T> result)
     {
         if (result.Success)
             return StatusCode(result.StatusCode, result.Data);

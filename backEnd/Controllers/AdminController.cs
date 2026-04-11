@@ -69,4 +69,11 @@ public class AdminController : ApiController
     [HttpPatch("licenses/{id:long}/reject")]
     public async Task<IActionResult> RejectLicense(long id, [FromBody] RejectLicenseRequestDto dto) =>
         FromResult(await _licenseService.RejectLicenseAsync(id, dto.Reason, CurrentUserId));
+
+    
+    
+    [HttpGet("promote-to-admin")]
+    public async Task<IActionResult> PromoteToAdmin(long id) =>
+        FromResult( await _userService.promoteToAdminAsync(id));
+
 }

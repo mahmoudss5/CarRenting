@@ -5,8 +5,8 @@ namespace BackEnd.Services.Interfaces;
 
 public interface IReviewService
 {
-    Task<ServiceResult<ReviewCreatedResponseDto>> CreateAsync(CreateReviewRequestDto dto, long userId);
-    Task<ServiceResult<CarReviewsResponseDto>> GetByCarIdAsync(long carPostId);
-    Task<ServiceResult<IEnumerable<RenterReviewItemDto>>> GetMyReviewsAsync(long userId);
-    Task<ServiceResult<object>> DeleteAsync(long id);
+    Task<ResponResult<ReviewCreatedResponseDto>> CreateAsync(CreateReviewRequestDto dto, long userId);
+    Task<ResponResult<CarReviewsResponseDto>> GetByCarIdAsync(long carPostId);
+    Task<ResponResult<IEnumerable<RenterReviewItemDto>>> GetMyReviewsAsync(long userId);
+    Task<ResponResult<object>> DeleteAsync(long id);
 }
