@@ -1,0 +1,76 @@
+using BackEnd.Common;
+using BackEnd.DTOs.Notification;
+using BackEnd.Models;
+using BackEnd.Repositories.Interfaces;
+using BackEnd.Services.Interfaces;
+
+namespace BackEnd.Services.Implementations;
+
+public class NotificationService : INotificationService
+{
+    private readonly INotificationRepository _repo;
+
+    public NotificationService(INotificationRepository repo) => _repo = repo;
+
+    public async Task<ServiceResult<NotificationsListDto>> GetMyNotificationsAsync(long userId)
+    {
+        var notifications = await _repo.GetByUserIdAsync(userId);
+        var items = notifications.Select(n => new NotificationDto
+        {
+            NotificationId = n.Id,
+            Type = n.Type,
+            Message = n.Message,
+            IsRead = n.IsRead,
+            CreatedAt = n.CreatedAt
+        }).ToList();
+
+        return ServiceResult<NotificationsListDto>.Ok(new NotificationsListDto
+        {
+            Notifications = items,
+            UnreadCount = items.Count(n => !n.IsRead),
+            Total = items.Count
+        });
+    }
+
+    public async Task<ServiceResult<object>> MarkReadAsync(long notificationId, long userId)
+    {
+        var notification = await _repo.GetByIdAsync(notificationId);
+        if (notification is null) return ServiceResult<object>.NotFound("Notification not found.");
+        if (notification.UserId != userId) return ServiceResult<object>.Forbidden("Access denied.");
+
+        notification.IsRead = true;
+        await _repo.UpdateAsync(notification);
+
+        return ServiceResult<object>.Ok(new { message = "Notification marked as read.", notification_id = notificationId, is_read = true });
+    }
+
+    public async Task<ServiceResult<object>> MarkAllReadAsync(long userId)
+    {
+        var before = await _repo.CountUnreadAsync(userId);
+        await _repo.MarkAllReadAsync(userId);
+        return ServiceResult<object>.Ok(new { message = "All notifications marked as read.", updated_count = before });
+    }
+
+    public async Task<ServiceResult<object>> DeleteAsync(long notificationId, long userId)
+    {
+        var notification = await _repo.GetByIdAsync(notificationId);
+        if (notification is null) return ServiceResult<object>.NotFound("Notification not found.");
+        if (notification.UserId != userId) return ServiceResult<object>.Forbidden("Access denied.");
+
+        await _repo.DeleteAsync(notification);
+        return ServiceResult<object>.Ok(new { message = "Notification deleted successfully.", notification_id = notificationId });
+    }
+
+    public async Task CreateAsync(long userId, string type, string message, long? referenceId = null, string? referenceType = null)
+    {
+        await _repo.CreateAsync(new Notification
+        {
+            UserId = userId,
+            Type = type,
+            Message = message,
+            ReferenceId = referenceId,
+            ReferenceType = referenceType,
+            IsRead = false
+        });
+    }
+}
