@@ -85,6 +85,9 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IAdminActionRepository, AdminActionRepository>();
 
+// ─── File Storage ─────────────────────────────────────────────────────────────
+builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+
 // ─── Services ─────────────────────────────────────────────────────────────────
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -106,6 +109,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger"; // access at /swagger
 });
 
+app.UseStaticFiles(); // serves wwwroot/uploads/* at /uploads/*
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -116,3 +120,9 @@ app.MapControllers();
 await DbSeeder.SeedAdminAsync(app.Services);
 
 app.Run();
+
+
+/*
+netstat -ano | findstr :5000 
+taskkill /PID <PID> /F
+*/

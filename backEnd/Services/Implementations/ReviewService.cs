@@ -1,4 +1,5 @@
 using BackEnd.Common;
+using BackEnd.DTOs.Car;
 using BackEnd.DTOs.Review;
 using BackEnd.Models;
 using BackEnd.Repositories.Interfaces;
@@ -118,5 +119,52 @@ public class ReviewService : IReviewService
 
         await _reviews.DeleteAsync(review);
         return ResponResult<object>.Ok(new { message = "Review deleted successfully.", review_id = id });
+    }
+
+    public async Task<ResponResult<List<CarReviewItemDto>>> GetTopCarReviewsAsync(long carPostId, int count)
+    {
+        var reviews = await _reviews.GetTopReviewsAsync(carPostId, count);
+        var items = reviews.Select(r => new CarReviewItemDto
+        {
+            RenterName = $"{r.Reviewer.FirstName} {r.Reviewer.LastName}".Trim(),
+            Rating     = r.Rating,
+            Feedback   = r.Comment,
+            CreatedAt  = r.CreatedAt
+        }).ToList();
+
+        return ResponResult<List<CarReviewItemDto>>.Ok(items);
+    }
+
+    public async Task<ResponResult<List<RenterReviewItemDto>>> GetAllCarPostReviews(long carPostId)
+    {
+        var car = await _carPosts.GetByIdAsync(carPostId);
+        if (car is null) return ResponResult<List<RenterReviewItemDto>>.NotFound("Car post not found.");
+
+        var reviews = await _reviews.GetAllReviewsAsync(carPostId);
+        var items = reviews.Select(r => new RenterReviewItemDto
+        {
+            ReviewId  = r.Id,
+            CarTitle  = r.CarPost.Title,
+            Rating    = r.Rating,
+            Feedback  = r.Comment,
+            CreatedAt = r.CreatedAt
+        }).ToList();
+
+        return ResponResult<List<RenterReviewItemDto>>.Ok(items);
+    }
+
+    public async Task<ResponResult<List<RenterReviewItemDto>>> GetAllReviews()
+    {
+        var reviews = await _reviews.GetAllReviews();
+        var items = reviews.Select(r => new RenterReviewItemDto
+        {
+            ReviewId  = r.Id,
+            CarTitle  = r.CarPost.Title,
+            Rating    = r.Rating,
+            Feedback  = r.Comment,
+            CreatedAt = r.CreatedAt
+        }).ToList();
+
+        return ResponResult<List<RenterReviewItemDto>>.Ok(items);
     }
 }

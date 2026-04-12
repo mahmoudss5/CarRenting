@@ -9,7 +9,7 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_PID: "Express"
     ports:
-      - "1433:1433"
+      - "1434:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
     healthcheck:
@@ -32,6 +32,8 @@ services:
       ConnectionStrings__DefaultConnection: "Server=database,1433;Database=CarRentalDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
     ports:
       - "5000:8080"
+    volumes:
+      - uploads_data:/app/wwwroot/uploads
     depends_on:
       database:
         condition: service_healthy
@@ -53,6 +55,7 @@ services:
 
 volumes:
   sqlserver_data:
+  uploads_data:
 
 networks:
   app-network:

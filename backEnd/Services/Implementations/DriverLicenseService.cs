@@ -12,14 +12,17 @@ public class DriverLicenseService : IDriverLicenseService
     private readonly IRenterRepository _renters;
     private readonly IAdminActionRepository _adminActions;
     private readonly INotificationService _notifications;
+    private readonly IFileStorageService _fileStorage;
 
     public DriverLicenseService(IDriverLicenseRepository licenses, IRenterRepository renters,
-        IAdminActionRepository adminActions, INotificationService notifications)
+        IAdminActionRepository adminActions, INotificationService notifications,
+        IFileStorageService fileStorage)
     {
         _licenses = licenses;
         _renters = renters;
         _adminActions = adminActions;
         _notifications = notifications;
+        _fileStorage = fileStorage;
     }
 
     public async Task<ResponResult<LicenseSubmittedResponseDto>> SubmitLicenseAsync(SubmitLicenseRequestDto dto, long userId)
@@ -47,6 +50,44 @@ public class DriverLicenseService : IDriverLicenseService
             Message = "License submitted successfully. Awaiting verification.",
             License = MapToDto(license)
         });
+    }
+
+    public async Task<ResponResult<LicenseResponseDto>> UploadLicenseImagesAsync(
+        IFormFile frontImage, IFormFile backImage, long userId)
+    {
+        var renter = await _renters.GetByUserIdAsync(userId);
+        if (renter is null)
+            return ResponResult<LicenseResponseDto>.Forbidden("Only Renters can upload license images.");
+
+        var license = await _licenses.GetByRenterIdAsync(renter.Id);
+        if (license is null)
+            return ResponResult<LicenseResponseDto>.NotFound("No license found. Submit your license details first.");
+
+        var subFolder = $"licenses/{renter.Id}";
+
+        try
+        {
+            // Delete old images before saving new ones
+            _fileStorage.Delete(license.FrontImageUrl);
+            _fileStorage.Delete(license.BackImageUrl);
+
+            license.FrontImageUrl = await _fileStorage.SaveAsync(frontImage, subFolder);
+            license.BackImageUrl  = await _fileStorage.SaveAsync(backImage,  subFolder);
+        }
+        catch (ArgumentException ex)
+        {
+            return ResponResult<LicenseResponseDto>.Fail(ex.Message);
+        }
+
+        await _licenses.UpdateAsync(license);
+
+        await _notifications.CreateAsync(
+            renter.UserId,
+            "LicenseImagesUploaded",
+            "Your driver license images have been uploaded and are awaiting admin review.",
+            referenceId: license.Id);
+
+        return ResponResult<LicenseResponseDto>.Ok(MapToDto(license));
     }
 
     public async Task<ResponResult<LicenseResponseDto>> GetMyLicenseAsync(long userId)
@@ -138,6 +179,8 @@ public class DriverLicenseService : IDriverLicenseService
         LicenseNumber = l.LicenseNumber,
         IssuingCountry = l.IssuingCountry,
         ExpiryDate = l.ExpiryDate,
+        FrontImageUrl = string.IsNullOrEmpty(l.FrontImageUrl) ? null : l.FrontImageUrl,
+        BackImageUrl  = string.IsNullOrEmpty(l.BackImageUrl)  ? null : l.BackImageUrl,
         VerificationStatus = l.VerificationStatus,
         SubmittedAt = l.CreatedAt
     };
