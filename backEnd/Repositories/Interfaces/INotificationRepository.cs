@@ -13,3 +13,4 @@ public interface INotificationRepository
     Task DeleteAsync(Notification notification);
     Task<int> CountAsync(long userId);
 }
+

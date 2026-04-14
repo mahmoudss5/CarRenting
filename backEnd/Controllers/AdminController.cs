@@ -28,6 +28,10 @@ public class AdminController : ApiController
     public async Task<IActionResult> GetUsers() =>
         FromResult(await _userService.GetAllUsersAsync());
 
+    [HttpGet("users/pending-owners")]
+    public async Task<IActionResult> GetPendingOwners() =>
+        FromResult(await _userService.GetPendingOwnersAsync());
+
     [HttpGet("users/{id:long}")]
     public async Task<IActionResult> GetUser(long id) =>
         FromResult(await _userService.GetUserByIdAsync(id));
