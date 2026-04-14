@@ -2,8 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary: #003d9b;
+  --primary-container: #0052cc;
+  --on-primary: #ffffff;
+  --on-surface: #141b2c;
+  --surface: #f8f9ff;
+  --surface-bright: #ffffff;
+  --surface-dim: #dde0ec;
+  --surface-low: #f0f2f8;
+  --surface-lowest: #ffffff;
+  --surface-mid: #e8eaf2;
+  --surface-high: #dde0ec;
+  --surface-highest: #d0d4e8;
+  --outline-variant: rgba(99, 102, 120, 0.15);
+  --secondary-container: #d4e3ff;
+  --on-secondary: #00235b;
+  --tertiary: #7c4dff;
+  --tertiary-fixed: #ede7ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
+  background-color: var(--surface);
+  color: var(--on-surface);
+  font-family: "Inter", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .ghost-border {
+    outline: 1px solid rgba(0, 61, 155, 0.20);
+  }
+
+  .glass-surface {
+    background: rgba(248, 249, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-dark {
+    background: rgba(20, 27, 44, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
 }
