@@ -7,6 +7,7 @@ import OwnerDashboard from "./Owner/OwnerDashboard";
 import OwnerHome from "./Owner/OwnerHome";
 import CreateCarPostPage from "./Owner/CreateCarPostPage";
 import OwnerProfileSettings from "./Owner/OwnerProfileSettings";
+import ExplorePage from "./features/explore/ExplorePage";
 
 function App() {
   return (
@@ -21,6 +22,9 @@ function App() {
         <Route path="/owner/create-post" element={<CreateCarPostPage />} />
         <Route path="/owner/settings" element={<OwnerProfileSettings />} />
         <Route path="/owner/*" element={<Navigate to="/owner/home" replace />} />
+        
+        
+        <Route path="/explore" element={<ExplorePage />} />
       </Routes>
     </BrowserRouter>
   );
