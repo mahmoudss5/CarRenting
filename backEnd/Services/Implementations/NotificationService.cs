@@ -9,8 +9,13 @@ namespace BackEnd.Services.Implementations;
 public class NotificationService : INotificationService
 {
     private readonly INotificationRepository _repo;
+    private readonly INotificationHubService _hub;
 
-    public NotificationService(INotificationRepository repo) => _repo = repo;
+    public NotificationService(INotificationRepository repo, INotificationHubService hub)
+    {
+        _repo = repo;
+        _hub = hub;
+    }
 
     public async Task<ResponResult<NotificationsListDto>> GetMyNotificationsAsync(long userId)
     {
@@ -63,7 +68,7 @@ public class NotificationService : INotificationService
 
     public async Task CreateAsync(long userId, string type, string message, long? referenceId = null, string? referenceType = null)
     {
-        await _repo.CreateAsync(new Notification
+        var notification = new Notification
         {
             UserId = userId,
             Type = type,
@@ -71,6 +76,17 @@ public class NotificationService : INotificationService
             ReferenceId = referenceId,
             ReferenceType = referenceType,
             IsRead = false
+        };
+
+        await _repo.CreateAsync(notification);
+
+        await _hub.SendNotificationAsync(userId, new NotificationDto
+        {
+            NotificationId = notification.Id,
+            Type = notification.Type,
+            Message = notification.Message,
+            IsRead = false,
+            CreatedAt = notification.CreatedAt
         });
     }
 }

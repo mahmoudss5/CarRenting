@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using BackEnd.Data;
+using BackEnd.Hubs;
 using BackEnd.Repositories.Implementations;
 using BackEnd.Repositories.Interfaces;
 using BackEnd.Services.Implementations;
@@ -59,6 +60,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
         };
+
+        // SignalR WebSocket connections cannot send headers, so the token
+        // arrives as the "access_token" query-string parameter instead.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddAuthorization();
@@ -69,7 +86,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
         policy.WithOrigins("http://localhost:3000")
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 // ─── Repositories ─────────────────────────────────────────────────────────────
@@ -98,6 +116,14 @@ builder.Services.AddScoped<IDriverLicenseService, DriverLicenseService>();
 builder.Services.AddScoped<IRentalService, RentalService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSingleton<INotificationHubService, NotificationHubService>();
+
+// ─── SignalR ──────────────────────────────────────────────────────────────────
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+    });
 
 var app = builder.Build();
 
@@ -116,6 +142,7 @@ app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok());
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 await DbSeeder.SeedAdminAsync(app.Services);
 
