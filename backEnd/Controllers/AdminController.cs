@@ -76,8 +76,8 @@ public class AdminController : ApiController
 
     
     
-    [HttpGet("promote-to-admin")]
+    [HttpPatch("users/{id:long}/promote-to-admin")]
     public async Task<IActionResult> PromoteToAdmin(long id) =>
-        FromResult( await _userService.promoteToAdminAsync(id));
+        FromResult(await _userService.promoteToAdminAsync(id));
 
 }

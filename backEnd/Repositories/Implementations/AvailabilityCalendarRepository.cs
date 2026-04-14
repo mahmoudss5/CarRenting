@@ -45,14 +45,17 @@ public class AvailabilityCalendarRepository : IAvailabilityCalendarRepository
         await _context.SaveChangesAsync();
     }
 
-    // Returns true if ANY calendar entry in the range is explicitly marked unavailable.
-    // Dates not present in the calendar are considered available (owner hasn't blocked them).
-    public async Task<bool> HasUnavailableDateInRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate) =>
+    public async Task<bool> HasBlockedDatesAsync(long carPostId, DateOnly startDate, DateOnly endDate) =>
         await _context.AvailabilityCalendars
             .AnyAsync(a => a.CarPostId == carPostId
                         && a.CalendarDate >= startDate
                         && a.CalendarDate <= endDate
                         && !a.IsAvailable);
+
+    // Returns true if ANY calendar entry in the range is explicitly marked unavailable.
+    // Dates not present in the calendar are considered available (owner hasn't blocked them).
+    public async Task<bool> HasUnavailableDateInRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate) =>
+        await HasBlockedDatesAsync(carPostId, startDate, endDate);
 
     // Marks every date in [startDate, endDate] as unavailable (upsert).
     public async Task BlockDatesRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate)
@@ -79,6 +82,38 @@ public class AvailabilityCalendarRepository : IAvailabilityCalendarRepository
             {
                 existing.IsAvailable = false;
                 existing.UpdatedAt = now;
+            }
+
+            current = current.AddDays(1);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UnblockDatesRangeIfNoAcceptedRentalsAsync(long carPostId, DateOnly startDate, DateOnly endDate, long excludeRentalRequestId)
+    {
+        var now = DateTime.UtcNow;
+        var current = startDate;
+
+        while (current <= endDate)
+        {
+            var dateHasOtherAcceptedRental = await _context.RentalRequests
+                .AnyAsync(r => r.CarPostId == carPostId
+                            && r.Id != excludeRentalRequestId
+                            && r.Status == "Accepted"
+                            && r.StartDate <= current
+                            && r.EndDate >= current);
+
+            if (!dateHasOtherAcceptedRental)
+            {
+                var existing = await _context.AvailabilityCalendars
+                    .FirstOrDefaultAsync(a => a.CarPostId == carPostId && a.CalendarDate == current);
+
+                if (existing is not null)
+                {
+                    existing.IsAvailable = true;
+                    existing.UpdatedAt = now;
+                }
             }
 
             current = current.AddDays(1);
