@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { saveAuth } from "../../lib/auth";
 
 const INITIAL_VALUES = { email: "", password: "" };
 
@@ -16,6 +17,11 @@ function validate(values) {
     errors.password = "Password must be at least 6 characters.";
   }
   return errors;
+}
+
+function redirectByRole(role, navigate) {
+  if (role === "Admin") return navigate("/admin");
+  navigate("/");
 }
 
 export function useLoginForm() {
@@ -48,13 +54,15 @@ export function useLoginForm() {
         body: JSON.stringify(values),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setServerError(data.message ?? "Invalid email or password.");
+        setServerError(data.error ?? "Invalid email or password.");
         return;
       }
 
-      navigate("/");
+      saveAuth(data.token, data.user);
+      redirectByRole(data.user?.role, navigate);
     } catch {
       setServerError("Unable to connect. Please try again.");
     } finally {

@@ -1,17 +1,18 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const INITIAL_VALUES = {
+  role: "",
   fullName: "",
   email: "",
   password: "",
-  licenseFront: null,
-  licenseBack: null,
   agreedToTerms: false,
 };
 
 function validate(values) {
   const errors = {};
+  if (!values.role) {
+    errors.role = "Please select a role to continue.";
+  }
   if (!values.fullName.trim()) {
     errors.fullName = "Full name is required.";
   }
@@ -32,18 +33,23 @@ function validate(values) {
 }
 
 export function useSignupForm() {
-  const navigate = useNavigate();
   const [values, setValues] = useState(INITIAL_VALUES);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [successData, setSuccessData] = useState(null); // { role } when signup succeeds
 
   const handleChange = (e) => {
-    const { name, type, value, checked, files } = e.target;
-    const newValue = type === "checkbox" ? checked : type === "file" ? files[0] : value;
+    const { name, type, value, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
     setValues((prev) => ({ ...prev, [name]: newValue }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
     if (serverError) setServerError("");
+  };
+
+  const setRole = (role) => {
+    setValues((prev) => ({ ...prev, role }));
+    if (errors.role) setErrors((prev) => ({ ...prev, role: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -56,25 +62,25 @@ export function useSignupForm() {
 
     setIsLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("fullName", values.fullName);
-      formData.append("email", values.email);
-      formData.append("password", values.password);
-      if (values.licenseFront) formData.append("licenseFront", values.licenseFront);
-      if (values.licenseBack) formData.append("licenseBack", values.licenseBack);
-
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: values.fullName,
+          email: values.email,
+          password: values.password,
+          role: values.role,
+        }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setServerError(data.message ?? "Registration failed. Please try again.");
+        setServerError(data.error ?? "Registration failed. Please try again.");
         return;
       }
 
-      navigate("/login");
+      setSuccessData({ role: values.role });
     } catch {
       setServerError("Unable to connect. Please try again.");
     } finally {
@@ -82,5 +88,14 @@ export function useSignupForm() {
     }
   };
 
-  return { values, errors, isLoading, serverError, handleChange, handleSubmit };
+  return {
+    values,
+    errors,
+    isLoading,
+    serverError,
+    successData,
+    handleChange,
+    setRole,
+    handleSubmit,
+  };
 }

@@ -31,6 +31,9 @@ public class AuthService : IAuthService
             return ResponResult<RegisterResponseDto>.Fail("Email is already registered.");
 
         var parts = dto.FullName.Trim().Split(' ', 2);
+        // Renters can use the platform immediately; CarOwners need admin approval.
+        var accountStatus = dto.Role == "Renter" ? "Active" : "Pending";
+
         var user = new User
         {
             FirstName = parts[0],
@@ -38,7 +41,7 @@ public class AuthService : IAuthService
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role,
-            AccountStatus = "Pending"
+            AccountStatus = accountStatus
         };
 
         user = await _users.CreateAsync(user);
@@ -48,9 +51,13 @@ public class AuthService : IAuthService
         else
             await _renters.CreateAsync(new Renter { UserId = user.Id });
 
+        var message = dto.Role == "Renter"
+            ? "Account created successfully. You can now log in."
+            : "Account created successfully. Awaiting admin approval.";
+
         return ResponResult<RegisterResponseDto>.Created(new RegisterResponseDto
         {
-            Message = "Account created successfully. Awaiting admin approval.",
+            Message = message,
             User = MapToAuthDto(user)
         });
     }
@@ -60,6 +67,9 @@ public class AuthService : IAuthService
         var user = await _users.GetByEmailAsync(dto.Email);
         if (user is null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             return ResponResult<LoginResponseDto>.Fail("Invalid email or password.", 401);
+
+        if (user.AccountStatus == "Pending")
+            return ResponResult<LoginResponseDto>.Forbidden("Your account is awaiting admin approval. You will be notified once it is reviewed.");
 
         if (user.AccountStatus == "Suspended")
             return ResponResult<LoginResponseDto>.Forbidden("Your account has been suspended.");

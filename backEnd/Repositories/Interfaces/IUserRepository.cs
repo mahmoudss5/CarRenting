@@ -11,4 +11,5 @@ public interface IUserRepository
     Task UpdateAsync(User user);
     Task DeleteAsync(User user);
     Task<bool> ExistsByEmailAsync(string email);
+    Task<IEnumerable<User>> GetByRoleAndStatusAsync(string role, string status);
 }

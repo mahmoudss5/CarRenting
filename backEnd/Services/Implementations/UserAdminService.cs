@@ -23,17 +23,26 @@ public class UserAdminService : IUserAdminService
     public async Task<ResponResult<IEnumerable<UserSummaryDto>>> GetAllUsersAsync()
     {
         var users = await _users.GetAllAsync();
-        var result = users.Select(u => new UserSummaryDto
-        {
-            UserId = u.Id,
-            FullName = $"{u.FirstName} {u.LastName}".Trim(),
-            Email = u.Email,
-            Role = u.Role,
-            Status = u.AccountStatus,
-            CreatedAt = u.CreatedAt
-        });
+        var result = users.Select(MapToSummary);
         return ResponResult<IEnumerable<UserSummaryDto>>.Ok(result);
     }
+
+    public async Task<ResponResult<IEnumerable<UserSummaryDto>>> GetPendingOwnersAsync()
+    {
+        var users = await _users.GetByRoleAndStatusAsync("CarOwner", "Pending");
+        var result = users.Select(MapToSummary);
+        return ResponResult<IEnumerable<UserSummaryDto>>.Ok(result);
+    }
+
+    private static UserSummaryDto MapToSummary(User u) => new()
+    {
+        UserId = u.Id,
+        FullName = $"{u.FirstName} {u.LastName}".Trim(),
+        Email = u.Email,
+        Role = u.Role,
+        Status = u.AccountStatus,
+        CreatedAt = u.CreatedAt
+    };
 
     public async Task<ResponResult<UserDetailDto>> GetUserByIdAsync(long id)
     {

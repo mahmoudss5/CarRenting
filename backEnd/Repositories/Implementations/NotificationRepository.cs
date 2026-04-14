@@ -26,6 +26,11 @@ public class NotificationRepository : INotificationRepository
     public async Task<int> CountAsync(long userId) =>
         await _context.Notifications.CountAsync(n => n.UserId == userId);
 
+    public Task<IEnumerable<Notification>> GetUnreadNotificationsAsync(long userId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task CreateAsync(Notification notification)
     {
         notification.CreatedAt = DateTime.UtcNow;
