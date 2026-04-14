@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import HomePage from "./HomePage/HomePage";
-import LoginPage from "./LoginPage/LoginPage";
-import SignupPage from "./SignupPage/SignupPage";
-import AdminDashboard from "./Admin/AdminDashboard";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './features/home/HomePage';
+import LoginPage from './features/auth/LoginPage';
+import SignupPage from './features/auth/SignupPage';
+import AdminDashboard from './features/admin/AdminDashboard';
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
@@ -16,5 +16,3 @@ function App() {
     </BrowserRouter>
   );
 }
-
-export default App;
