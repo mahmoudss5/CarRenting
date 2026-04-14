@@ -37,7 +37,37 @@ export default function Navbar() {
               }`
             }
           >
-            Browse Cars
+            Home
+          </NavLink>
+          <NavLink
+            to="/explore"
+            className={({ isActive }) =>
+              `font-inter text-[0.9rem] font-medium transition-colors duration-200 ${
+                isActive ? 'text-primary' : 'text-on-surface/60 hover:text-on-surface'
+              }`
+            }
+          >
+            Discover
+          </NavLink>
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              `font-inter text-[0.9rem] font-medium transition-colors duration-200 ${
+                isActive ? 'text-primary' : 'text-on-surface/60 hover:text-on-surface'
+              }`
+            }
+          >
+            Dashboard
+          </NavLink>
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `font-inter text-[0.9rem] font-medium transition-colors duration-200 ${
+                isActive ? 'text-primary' : 'text-on-surface/60 hover:text-on-surface'
+              }`
+            }
+          >
+            Settings
           </NavLink>
           <NavLink
             to="/admin"
