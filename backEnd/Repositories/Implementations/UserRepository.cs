@@ -44,4 +44,10 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> ExistsByEmailAsync(string email) =>
         await _context.Users.AnyAsync(u => u.Email == email);
+
+    public async Task<IEnumerable<User>> GetByRoleAndStatusAsync(string role, string status) =>
+        await _context.Users
+            .Where(u => u.Role == role && u.AccountStatus == status)
+            .OrderByDescending(u => u.CreatedAt)
+            .ToListAsync();
 }

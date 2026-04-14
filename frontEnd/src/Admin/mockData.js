@@ -1,17 +1,36 @@
+export const INITIAL_VERIFICATIONS = [
+  {
+    id: "v1",
+    initials: "EM",
+    name: "Elena Mitsakis",
+    email: "e.mitsakis@gmail.com",
+    documentName: "view_license_front.jpg",
+    submittedAt: "Today, 08:15 AM",
+  },
+  {
+    id: "v2",
+    initials: "AW",
+    name: "Aaron Wright",
+    email: "aw_design@outlook.com",
+    documentName: "DL_Full_2024.pdf",
+    submittedAt: "Oct 26, 2024",
+  },
+];
+
 export const INITIAL_USERS = [
   {
     id: "u1",
-    ownerName: "JD",
+    initials: "JD",
     fullName: "Julianne DeMarco",
     email: "j.demarco@agency.com",
-    dateRequested: "Oct 24, 2024",
+    dateRegistered: "Oct 24, 2024",
   },
   {
     id: "u2",
-    ownerName: "Robert Kincaid",
+    initials: "RK",
     fullName: "Robert Kincaid",
     email: "rk_mobility@provider.io",
-    dateRequested: "Oct 23, 2024",
+    dateRegistered: "Oct 23, 2024",
   },
 ];
 

@@ -28,6 +28,10 @@ public class AdminController : ApiController
     public async Task<IActionResult> GetUsers() =>
         FromResult(await _userService.GetAllUsersAsync());
 
+    [HttpGet("users/pending-owners")]
+    public async Task<IActionResult> GetPendingOwners() =>
+        FromResult(await _userService.GetPendingOwnersAsync());
+
     [HttpGet("users/{id:long}")]
     public async Task<IActionResult> GetUser(long id) =>
         FromResult(await _userService.GetUserByIdAsync(id));
@@ -72,8 +76,8 @@ public class AdminController : ApiController
 
     
     
-    [HttpGet("promote-to-admin")]
+    [HttpPatch("users/{id:long}/promote-to-admin")]
     public async Task<IActionResult> PromoteToAdmin(long id) =>
-        FromResult( await _userService.promoteToAdminAsync(id));
+        FromResult(await _userService.promoteToAdminAsync(id));
 
 }

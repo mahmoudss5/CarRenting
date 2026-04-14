@@ -29,13 +29,11 @@ public class CarPostService : ICarPostService
     {
         var cars = await _carPosts.GetActiveListingsAsync(page, pageSize);
         var total = await _carPosts.CountActiveListingsAsync();
+        var ratingsByCarId = await _reviews.GetAverageRatingsByCarPostIdsAsync(cars.Select(c => c.Id));
 
-        var items = new List<CarListItemDto>();
-        foreach (var c in cars)
-        {
-            var rating = await _reviews.GetAverageRatingAsync(c.Id);
-            items.Add(MapToListItem(c, rating));
-        }
+        var items = cars
+            .Select(c => MapToListItem(c, ratingsByCarId.GetValueOrDefault(c.Id, 0)))
+            .ToList();
 
         return ResponResult<object>.Ok(new { cars = items, total, page });
     }
@@ -54,13 +52,11 @@ public class CarPostService : ICarPostService
             query.MinPrice, query.MaxPrice, query.Page, query.PageSize);
         var total = await _carPosts.CountSearchAsync(query.Type, query.Brand, query.Location,
             query.MinPrice, query.MaxPrice);
+        var ratingsByCarId = await _reviews.GetAverageRatingsByCarPostIdsAsync(cars.Select(c => c.Id));
 
-        var items = new List<CarListItemDto>();
-        foreach (var c in cars)
-        {
-            var rating = await _reviews.GetAverageRatingAsync(c.Id);
-            items.Add(MapToListItem(c, rating));
-        }
+        var items = cars
+            .Select(c => MapToListItem(c, ratingsByCarId.GetValueOrDefault(c.Id, 0)))
+            .ToList();
 
         return ResponResult<object>.Ok(new { results = items, total });
     }
@@ -69,6 +65,8 @@ public class CarPostService : ICarPostService
     {
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null) return ResponResult<CarPostCreatedDto>.Forbidden("Only Car Owners can create posts.");
+        if (owner.User.AccountStatus != "Active")
+            return ResponResult<CarPostCreatedDto>.Forbidden("Your owner account must be approved to create car posts.");
 
         var car = new CarPost
         {
@@ -110,6 +108,8 @@ public class CarPostService : ICarPostService
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null || car.OwnerId != owner.Id)
             return ResponResult<CarPostUpdatedDto>.Forbidden("You can only update your own posts.");
+        if (owner.User.AccountStatus != "Active")
+            return ResponResult<CarPostUpdatedDto>.Forbidden("Your owner account must be approved to update car posts.");
 
         if (dto.Title is not null) car.Title = dto.Title;
         if (dto.Description is not null) car.Description = dto.Description;
@@ -143,6 +143,8 @@ public class CarPostService : ICarPostService
             var owner = await _carOwners.GetByUserIdAsync(userId);
             if (owner is null || car.OwnerId != owner.Id)
                 return ResponResult<object>.Forbidden("You can only delete your own posts.");
+            if (owner.User.AccountStatus != "Active")
+                return ResponResult<object>.Forbidden("Your owner account must be approved to delete car posts.");
         }
 
         if (car.CarStatus == "Rented")
@@ -156,6 +158,8 @@ public class CarPostService : ICarPostService
     {
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null) return ResponResult<IEnumerable<OwnerCarDto>>.Forbidden("Only Car Owners can access this.");
+        if (owner.User.AccountStatus != "Active")
+            return ResponResult<IEnumerable<OwnerCarDto>>.Forbidden("Your owner account must be approved to access owner cars.");
 
         var cars = await _carPosts.GetByOwnerIdAsync(owner.Id);
         var result = cars.Select(c => new OwnerCarDto

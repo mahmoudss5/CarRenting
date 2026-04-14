@@ -6,6 +6,7 @@ namespace BackEnd.Services.Interfaces;
 public interface IUserAdminService
 {
     Task<ResponResult<IEnumerable<UserSummaryDto>>> GetAllUsersAsync();
+    Task<ResponResult<IEnumerable<UserSummaryDto>>> GetPendingOwnersAsync();
     Task<ResponResult<UserDetailDto>> GetUserByIdAsync(long id);
     Task<ResponResult<UserActionResponseDto>> ApproveUserAsync(long id, long adminId);
     Task<ResponResult<UserActionResponseDto>> RejectUserAsync(long id, string reason, long adminId);

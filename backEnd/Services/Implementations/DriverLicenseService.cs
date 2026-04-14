@@ -32,7 +32,24 @@ public class DriverLicenseService : IDriverLicenseService
 
         var existing = await _licenses.GetByRenterIdAsync(renter.Id);
         if (existing is not null)
-            return ResponResult<LicenseSubmittedResponseDto>.Fail("A license is already submitted.");
+        {
+            if (existing.VerificationStatus != "Rejected")
+                return ResponResult<LicenseSubmittedResponseDto>.Fail("A license is already submitted.");
+
+            existing.LicenseNumber = dto.LicenseNumber;
+            existing.IssuingCountry = dto.IssuingCountry;
+            existing.ExpiryDate = dto.ExpiryDate;
+            existing.VerificationStatus = "Pending";
+            existing.VerifiedAt = null;
+            existing.VerifiedByAdminId = null;
+            await _licenses.UpdateAsync(existing);
+
+            return ResponResult<LicenseSubmittedResponseDto>.Ok(new LicenseSubmittedResponseDto
+            {
+                Message = "License resubmitted successfully. Awaiting verification.",
+                License = MapToDto(existing)
+            });
+        }
 
         var license = new DriverLicense
         {
@@ -154,6 +171,8 @@ public class DriverLicenseService : IDriverLicenseService
         if (license is null) return ResponResult<LicenseActionResponseDto>.NotFound("License not found.");
 
         license.VerificationStatus = "Rejected";
+        license.VerifiedAt = null;
+        license.VerifiedByAdminId = null;
         await _licenses.UpdateAsync(license);
 
         await _adminActions.CreateAsync(new AdminAction
@@ -164,6 +183,10 @@ public class DriverLicenseService : IDriverLicenseService
             Action = "Reject",
             Reason = reason
         });
+
+        await _notifications.CreateAsync(license.Renter.UserId, "LicenseRejected",
+            $"Your driver license was rejected. Reason: {reason}",
+            referenceId: licenseId, referenceType: "DriverLicense");
 
         return ResponResult<LicenseActionResponseDto>.Ok(new LicenseActionResponseDto
         {

@@ -1,15 +1,19 @@
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import FeaturedCars from "./components/FeaturedCars";
-import Footer from "../footer";
+import Navbar from "../components/layout/Navbar";
+import HeroSection from "./components/HeroSection";
+import StatsBar from "./components/StatsBar";
+import FeaturedSection from "./components/FeaturedSection";
+import TrustSection from "./components/TrustSection";
+import SiteFooter from "../components/layout/SiteFooter";
 
 export default function HomePage() {
   return (
-    <>
+    <div className="bg-surface">
       <Navbar />
-      <Hero />
-      <FeaturedCars />
-      <Footer />
-    </>
+      <HeroSection />
+      <StatsBar />
+      <FeaturedSection />
+      <TrustSection />
+      <SiteFooter />
+    </div>
   );
 }
