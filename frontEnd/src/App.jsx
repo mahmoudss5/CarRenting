@@ -7,6 +7,7 @@ import SignupPage from './features/auth/SignupPage';
 import DashboardPage from './features/dashboard/DashboardPage';
 import AdminDashboard from './features/admin/AdminDashboard';
 import ProfileSettingsPage from './features/profile-settings/ProfileSettingsPage';
+import ConfirmRequestPage from './features/confirm-request/ConfirmRequestPage';
 
 export default function App() {
   return (
@@ -19,6 +20,8 @@ export default function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/settings" element={<ProfileSettingsPage />} />
+        <Route path="/confirmrequest" element={<ConfirmRequestPage />} />
+        <Route path="/confirm-request" element={<ConfirmRequestPage />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>

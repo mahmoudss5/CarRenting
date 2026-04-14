@@ -8,6 +8,9 @@ const VARIANT_CLASSES = {
   electric:    'bg-secondary-container text-on-secondary-container',
   performance: 'bg-tertiary-fixed text-tertiary',
   pending:     'bg-tertiary-fixed text-tertiary',
+  lowstock:    'bg-[#ffe4c8] text-[#7b3800]',
+  rented:      'bg-primary text-white',
+  completed:   'bg-[#d8ddf0] text-[#525d7a]',
   suv:         'bg-[#e6f4ea] text-[#1b5e20]',
   luxury:      'bg-[#ede7f6] text-[#4527a0]',
 };
