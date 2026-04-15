@@ -9,7 +9,7 @@ import { useProfileSettings } from './hooks/useProfileSettings';
  * Renter profile settings page — composition only.
  * Business logic remains in useProfileSettings.
  */
-export default function ProfileSettingsPage() {
+export default function RenterProfileSettingsPage() {
   const {
     profileForm,
     preferenceForm,

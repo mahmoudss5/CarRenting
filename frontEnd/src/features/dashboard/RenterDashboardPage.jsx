@@ -8,7 +8,7 @@ import { useDashboard } from './hooks/useDashboard';
  * Dashboard page — purely compositional.
  * All state and derived data come from useDashboard.
  */
-export default function DashboardPage() {
+export default function RenterDashboardPage() {
   const {
     user,
     activeTab,

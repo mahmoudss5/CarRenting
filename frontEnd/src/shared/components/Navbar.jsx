@@ -20,7 +20,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link
-          to="/"
+          to="/renter-home"
           className="font-manrope font-extrabold text-[1.5rem] text-on-surface tracking-tight"
         >
           Drive<span className="text-primary">Share</span>
@@ -29,7 +29,7 @@ export default function Navbar() {
         {/* Nav links */}
         <nav className="hidden md:flex items-center gap-8">
           <NavLink
-            to="/"
+            to="/renter-home"
             end
             className={({ isActive }) =>
               `font-inter text-[0.9rem] font-medium transition-colors duration-200 ${
@@ -40,7 +40,7 @@ export default function Navbar() {
             Home
           </NavLink>
           <NavLink
-            to="/explore"
+            to="/renter-explore"
             className={({ isActive }) =>
               `font-inter text-[0.9rem] font-medium transition-colors duration-200 ${
                 isActive ? 'text-primary' : 'text-on-surface/60 hover:text-on-surface'
@@ -50,7 +50,7 @@ export default function Navbar() {
             Discover
           </NavLink>
           <NavLink
-            to="/dashboard"
+            to="/renter-dashboard"
             className={({ isActive }) =>
               `font-inter text-[0.9rem] font-medium transition-colors duration-200 ${
                 isActive ? 'text-primary' : 'text-on-surface/60 hover:text-on-surface'
@@ -60,7 +60,7 @@ export default function Navbar() {
             Dashboard
           </NavLink>
           <NavLink
-            to="/settings"
+            to="/renter-settings"
             className={({ isActive }) =>
               `font-inter text-[0.9rem] font-medium transition-colors duration-200 ${
                 isActive ? 'text-primary' : 'text-on-surface/60 hover:text-on-surface'

@@ -61,7 +61,7 @@ export default function ExploreCarCard({ car }) {
 
         {/* View Details — secondary style, not gradient */}
         <Link
-          to={`/cars/${car.id}`}
+          to={`/renter-car-detail/${car.id}`}
           className="w-full text-center py-2.5 rounded-md font-inter text-[0.875rem] font-semibold text-primary bg-secondary-container hover:bg-primary hover:text-white transition-all duration-200"
         >
           View Details

@@ -2,7 +2,7 @@ import PageLayout from '../../shared/layouts/PageLayout';
 import ConfirmRequestForm from './components/ConfirmRequestForm';
 import { useConfirmRequest } from './hooks/useConfirmRequest';
 
-export default function ConfirmRequestPage() {
+export default function RenterConfirmRequestPage() {
   const {
     data,
     cvv,

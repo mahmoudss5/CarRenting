@@ -71,7 +71,7 @@ export default function CarCard({ car }) {
             </span>
           </div>
 
-          <PrimaryButton to={`/cars/${car.id}`} size="sm">
+          <PrimaryButton to={`/renter-car-detail/${car.id}`} size="sm">
             Browse Details
           </PrimaryButton>
         </div>

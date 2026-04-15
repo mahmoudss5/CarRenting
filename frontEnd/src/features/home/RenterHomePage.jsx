@@ -10,7 +10,7 @@ import { useSearch } from './hooks/useSearch';
  * Home page — does NOT use PageLayout so the hero can bleed
  * under the fixed glass navbar. Composes all sections.
  */
-export default function HomePage() {
+export default function RenterHomePage() {
   const { values, handleChange, handleSearch } = useSearch();
 
   return (

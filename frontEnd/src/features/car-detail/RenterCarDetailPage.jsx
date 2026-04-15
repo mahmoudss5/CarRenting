@@ -12,7 +12,7 @@ import { useCarDetail } from './hooks/useCarDetail';
  * Car Detail page — purely compositional.
  * Two-column: left scrollable content + right sticky booking card.
  */
-export default function CarDetailPage() {
+export default function RenterCarDetailPage() {
   const { car, booking, handlers } = useCarDetail();
 
   return (

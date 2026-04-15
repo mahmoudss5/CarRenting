@@ -9,7 +9,7 @@ import { useExplore } from './hooks/useExplore';
  * Explore / Browse All Posts page.
  * Purely compositional — all logic comes from useExplore.
  */
-export default function ExplorePage() {
+export default function RenterExplorePage() {
   const {
     activeCategory,
     pendingFilters,
