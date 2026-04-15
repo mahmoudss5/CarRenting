@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { authHeaders } from "../../lib/auth";
+import {
+  getPendingOwners,
+  approveOwnerAccount,
+  rejectOwnerAccount,
+  getPendingCarPosts,
+  approveCarPost,
+  rejectCarPost,
+} from "../../Services/Admin services";
 
 function formatDate(isoString) {
   return new Date(isoString).toLocaleDateString("en-US", {
@@ -38,31 +45,17 @@ export function useAdminApproval() {
   const [carPosts, setCarPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const headers = authHeaders();
-
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [ownersRes, carsRes] = await Promise.all([
-        fetch("/api/admin/users/pending-owners", { headers }),
-        fetch("/api/admin/cars/pending", { headers }),
-      ]);
-
-      if (ownersRes.ok) {
-        const data = await ownersRes.json();
-        setUsers(Array.isArray(data) ? data.map(mapUser) : []);
-      }
-
-      if (carsRes.ok) {
-        const data = await carsRes.json();
-        setCarPosts(Array.isArray(data) ? data.map(mapCar) : []);
-      }
+      const [owners, cars] = await Promise.all([getPendingOwners(), getPendingCarPosts()]);
+      setUsers(owners.map(mapUser));
+      setCarPosts(cars.map(mapCar));
     } catch (err) {
       console.error("Failed to load admin data:", err);
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -70,32 +63,24 @@ export function useAdminApproval() {
   }, [fetchAll]);
 
   const approveUser = async (id) => {
-    await fetch(`/api/admin/users/${id}/approve`, { method: "PATCH", headers });
+    await approveOwnerAccount(id);
     setUsers((prev) => prev.filter((u) => u.id !== id));
     setTotalUsers((n) => n + 1);
   };
 
   const rejectUser = async (id) => {
-    await fetch(`/api/admin/users/${id}/reject`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ reason: "Application rejected by admin." }),
-    });
+    await rejectOwnerAccount(id);
     setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
   const approveCar = async (id) => {
-    await fetch(`/api/admin/cars/${id}/approve`, { method: "PATCH", headers });
+    await approveCarPost(id);
     setCarPosts((prev) => prev.filter((c) => c.id !== id));
     setTotalActiveCars((n) => n + 1);
   };
 
   const rejectCar = async (id) => {
-    await fetch(`/api/admin/cars/${id}/reject`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ reason: "Car post rejected by admin." }),
-    });
+    await rejectCarPost(id);
     setCarPosts((prev) => prev.filter((c) => c.id !== id));
   };
 
