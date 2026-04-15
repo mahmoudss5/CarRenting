@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { saveAuth } from "../../lib/auth";
+import loginSignupService from "../../service/loginSignup/loginSignupService";
 
 const INITIAL_VALUES = { email: "", password: "" };
 
@@ -49,23 +49,10 @@ export function useLoginForm() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setServerError(data.error ?? "Invalid email or password.");
-        return;
-      }
-
-      saveAuth(data.token, data.user);
+      const data = await loginSignupService.login(values);
       redirectByRole(data.user?.role, navigate);
-    } catch {
-      setServerError("Unable to connect. Please try again.");
+    } catch (error) {
+      setServerError(error?.data?.error ?? error?.message ?? "Unable to connect. Please try again.");
     } finally {
       setIsLoading(false);
     }

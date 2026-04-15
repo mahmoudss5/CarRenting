@@ -1,4 +1,5 @@
 import { useState } from "react";
+import loginSignupService from "../../service/loginSignup/loginSignupService";
 
 const INITIAL_VALUES = {
   role: "",
@@ -62,27 +63,15 @@ export function useSignupForm() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          full_name: values.fullName,
-          email: values.email,
-          password: values.password,
-          role: values.role,
-        }),
+      await loginSignupService.signup({
+        full_name: values.fullName,
+        email: values.email,
+        password: values.password,
+        role: values.role,
       });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setServerError(data.error ?? "Registration failed. Please try again.");
-        return;
-      }
-
       setSuccessData({ role: values.role });
-    } catch {
-      setServerError("Unable to connect. Please try again.");
+    } catch (error) {
+      setServerError(error?.data?.error ?? error?.message ?? "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
