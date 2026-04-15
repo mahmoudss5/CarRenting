@@ -8,6 +8,7 @@ public interface IRentalRequestRepository
     Task<RentalRequest?> GetByIdWithDetailsAsync(long id);
     Task<IEnumerable<RentalRequest>> GetByRenterIdAsync(long renterId);
     Task<IEnumerable<RentalRequest>> GetByCarOwnerIdAsync(long carOwnerId);
+    Task<bool> HasConflictAsync(long carPostId, DateOnly startDate, DateOnly endDate);
     Task<bool> HasOverlappingAcceptedRentalAsync(long carPostId, DateOnly startDate, DateOnly endDate);
     Task<IEnumerable<RentalRequest>> GetAllWithDetailsAsync();
     Task<RentalRequest> CreateAsync(RentalRequest request);

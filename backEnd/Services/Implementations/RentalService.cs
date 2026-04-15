@@ -43,17 +43,19 @@ public class RentalService : IRentalService
 
         var car = await _carPosts.GetByIdAsync(dto.PostId);
         if (car is null) return ResponResult<RentalCreatedResponseDto>.NotFound("Car post not found.");
-        if (car.PostStatus != "Active" || car.CarStatus != "Available")
+        if (car.PostStatus != "Active")
             return ResponResult<RentalCreatedResponseDto>.Fail("This car is not available for rental.");
 
         if (dto.EndDate < dto.StartDate)
             return ResponResult<RentalCreatedResponseDto>.Fail("End date must be after start date.");
 
-        if (await _rentals.HasOverlappingAcceptedRentalAsync(dto.PostId, dto.StartDate, dto.EndDate))
-            return ResponResult<RentalCreatedResponseDto>.Fail("The car is already booked for one or more of the selected dates.");
-
-        if (await _availability.HasUnavailableDateInRangeAsync(dto.PostId, dto.StartDate, dto.EndDate))
+        var ownerBlocked = await _availability.HasBlockedDatesAsync(dto.PostId, dto.StartDate, dto.EndDate);
+        if (ownerBlocked)
             return ResponResult<RentalCreatedResponseDto>.Fail("One or more of the selected dates are marked as unavailable by the owner.");
+
+        var rentalConflict = await _rentals.HasConflictAsync(dto.PostId, dto.StartDate, dto.EndDate);
+        if (rentalConflict)
+            return ResponResult<RentalCreatedResponseDto>.Fail("The car is already booked for one or more of the selected dates.");
 
         var totalDays = (short)(dto.EndDate.DayNumber - dto.StartDate.DayNumber + 1);
         var totalPrice = car.PricePerDay * totalDays;
@@ -150,6 +152,8 @@ public class RentalService : IRentalService
     {
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null) return ResponResult<IEnumerable<OwnerRentalDto>>.Forbidden("Only Car Owners can access this.");
+        if (owner.User.AccountStatus != "Active")
+            return ResponResult<IEnumerable<OwnerRentalDto>>.Forbidden("Your owner account must be approved to access owner rentals.");
 
         var requests = await _rentals.GetByCarOwnerIdAsync(owner.Id);
         var items = requests.Select(r => new OwnerRentalDto
@@ -175,6 +179,8 @@ public class RentalService : IRentalService
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null || request.CarPost.OwnerId != owner.Id)
             return ResponResult<RentalActionResponseDto>.Forbidden("Access denied.");
+        if (owner.User.AccountStatus != "Active")
+            return ResponResult<RentalActionResponseDto>.Forbidden("Your owner account must be approved to manage rental requests.");
 
         if (request.Status != "Pending")
             return ResponResult<RentalActionResponseDto>.Fail($"Cannot accept a request with status '{request.Status}'.");
@@ -216,6 +222,8 @@ public class RentalService : IRentalService
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null || request.CarPost.OwnerId != owner.Id)
             return ResponResult<RentalActionResponseDto>.Forbidden("Access denied.");
+        if (owner.User.AccountStatus != "Active")
+            return ResponResult<RentalActionResponseDto>.Forbidden("Your owner account must be approved to manage rental requests.");
 
         if (request.Status != "Pending")
             return ResponResult<RentalActionResponseDto>.Fail($"Cannot reject a request with status '{request.Status}'.");
@@ -255,6 +263,8 @@ public class RentalService : IRentalService
             var owner = await _carOwners.GetByUserIdAsync(userId);
             if (owner is null || request.CarPost.OwnerId != owner.Id)
                 return ResponResult<RentalActionResponseDto>.Forbidden("Access denied.");
+            if (owner.User.AccountStatus != "Active")
+                return ResponResult<RentalActionResponseDto>.Forbidden("Your owner account must be approved to manage rental requests.");
         }
 
         if (request.Status != "Accepted")
@@ -265,6 +275,8 @@ public class RentalService : IRentalService
         request.CarPost.CarStatus = "Available";
         await _rentals.UpdateAsync(request);
         await _carPosts.UpdateAsync(request.CarPost);
+        await _availability.UnblockDatesRangeIfNoAcceptedRentalsAsync(
+            request.CarPostId, request.StartDate, request.EndDate, request.Id);
 
         await _statusLogs.CreateAsync(new RentalStatusLog
         {

@@ -7,6 +7,8 @@ public interface IAvailabilityCalendarRepository
     Task<IEnumerable<AvailabilityCalendar>> GetByCarPostIdAsync(long carPostId);
     Task<AvailabilityCalendar?> GetByCarPostAndDateAsync(long carPostId, DateOnly date);
     Task UpsertRangeAsync(long carPostId, IEnumerable<AvailabilityCalendar> entries);
+    Task<bool> HasBlockedDatesAsync(long carPostId, DateOnly startDate, DateOnly endDate);
     Task<bool> HasUnavailableDateInRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate);
     Task BlockDatesRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate);
+    Task UnblockDatesRangeIfNoAcceptedRentalsAsync(long carPostId, DateOnly startDate, DateOnly endDate, long excludeRentalRequestId);
 }

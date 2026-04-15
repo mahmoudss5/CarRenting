@@ -41,7 +41,7 @@ public class AuthService : IAuthService
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role,
-            AccountStatus = accountStatus
+
         };
 
         user = await _users.CreateAsync(user);
@@ -69,7 +69,7 @@ public class AuthService : IAuthService
             return ResponResult<LoginResponseDto>.Fail("Invalid email or password.", 401);
 
         if (user.AccountStatus == "Pending")
-            return ResponResult<LoginResponseDto>.Forbidden("Your account is awaiting admin approval. You will be notified once it is reviewed.");
+
 
         if (user.AccountStatus == "Suspended")
             return ResponResult<LoginResponseDto>.Forbidden("Your account has been suspended.");

@@ -11,13 +11,15 @@ public class AvailabilityService : IAvailabilityService
     private readonly IAvailabilityCalendarRepository _repo;
     private readonly ICarPostRepository _carPosts;
     private readonly ICarOwnerRepository _carOwners;
+    private readonly IRentalRequestRepository _rentals;
 
     public AvailabilityService(IAvailabilityCalendarRepository repo,
-        ICarPostRepository carPosts, ICarOwnerRepository carOwners)
+        ICarPostRepository carPosts, ICarOwnerRepository carOwners, IRentalRequestRepository rentals)
     {
         _repo = repo;
         _carPosts = carPosts;
         _carOwners = carOwners;
+        _rentals = rentals;
     }
 
     public async Task<ResponResult<CarAvailabilityResponseDto>> GetAvailabilityAsync(long carPostId)
@@ -44,6 +46,9 @@ public class AvailabilityService : IAvailabilityService
         var result = await VerifyOwnership(carPostId, userId);
         if (result is not null) return result;
 
+        var reopenBookedDatesResult = await ValidateNoBookedDatesAreReopened(carPostId, dto);
+        if (reopenBookedDatesResult is not null) return reopenBookedDatesResult;
+
         var entries = dto.Dates.Select(d => new AvailabilityCalendar
         {
             CarPostId = carPostId,
@@ -59,6 +64,9 @@ public class AvailabilityService : IAvailabilityService
     {
         var result = await VerifyOwnership(carPostId, userId);
         if (result is not null) return result;
+
+        var reopenBookedDatesResult = await ValidateNoBookedDatesAreReopened(carPostId, dto);
+        if (reopenBookedDatesResult is not null) return reopenBookedDatesResult;
 
         var entries = dto.Dates.Select(d => new AvailabilityCalendar
         {
@@ -79,6 +87,29 @@ public class AvailabilityService : IAvailabilityService
         var owner = await _carOwners.GetByUserIdAsync(userId);
         if (owner is null || car.OwnerId != owner.Id)
             return ResponResult<object>.Forbidden("You can only manage availability for your own cars.");
+        if (owner.User.AccountStatus != "Active")
+            return ResponResult<object>.Forbidden("Your owner account must be approved to manage availability.");
+
+        return null;
+    }
+
+    private async Task<ResponResult<object>?> ValidateNoBookedDatesAreReopened(long carPostId, SetAvailabilityRequestDto dto)
+    {
+        var datesBeingSetAvailable = dto.Dates
+            .Where(d => d.IsAvailable)
+            .Select(d => d.Date)
+            .Distinct()
+            .ToList();
+
+        foreach (var date in datesBeingSetAvailable)
+        {
+            var hasAcceptedRentalOnDate = await _rentals.HasOverlappingAcceptedRentalAsync(carPostId, date, date);
+            if (hasAcceptedRentalOnDate)
+            {
+                return ResponResult<object>.Forbidden(
+                    $"Cannot mark {date:yyyy-MM-dd} as available because it is already booked by an accepted rental.");
+            }
+        }
 
         return null;
     }

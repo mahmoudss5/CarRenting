@@ -56,6 +56,18 @@ public class ReviewRepository : IReviewRepository
         return ratings.Count > 0 ? ratings.Average() : 0;
     }
 
+    public async Task<Dictionary<long, double>> GetAverageRatingsByCarPostIdsAsync(IEnumerable<long> carPostIds)
+    {
+        var ids = carPostIds.Distinct().ToList();
+        if (ids.Count == 0) return new Dictionary<long, double>();
+
+        return await _context.Reviews
+            .Where(r => ids.Contains(r.CarPostId))
+            .GroupBy(r => r.CarPostId)
+            .Select(g => new { CarPostId = g.Key, Average = g.Average(r => (double)r.Rating) })
+            .ToDictionaryAsync(x => x.CarPostId, x => x.Average);
+    }
+
     public async Task<List<Review>> GetTopReviewsAsync(long carPostId, int count)
     {
         // here we get the first count reviews with the highest rating
