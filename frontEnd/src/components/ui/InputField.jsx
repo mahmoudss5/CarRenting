@@ -1,19 +1,5 @@
 import { useState } from "react";
-
-function EyeIcon({ open }) {
-  return open ? (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  );
-}
+import { Eye, EyeOff } from "lucide-react";
 
 export default function InputField({
   label,
@@ -52,10 +38,10 @@ export default function InputField({
             "w-full px-4 py-3 rounded-md",
             "font-body text-base text-on-surface",
             "bg-surface-highest placeholder:text-on-surface/30",
-            "outline-none border-none",
+            "outline-none border border-transparent",
             "transition-all duration-200",
-            "focus:bg-surface-low focus:ghost-border",
-            error ? "ring-1 ring-red-400" : "",
+            "focus:bg-surface-low focus:border-primary/30 focus:ring-2 focus:ring-primary/10",
+            error ? "border-red-400 ring-1 ring-red-200" : "",
           ].join(" ")}
         />
         {isPassword && (
@@ -65,12 +51,14 @@ export default function InputField({
             onClick={() => setShowPassword((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface/40 hover:text-on-surface/70 transition-colors"
           >
-            <EyeIcon open={showPassword} />
+            {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
           </button>
         )}
       </div>
       {error && (
-        <span className="font-body text-body-md text-red-500">{error}</span>
+        <span className="font-body text-body-md text-red-500 flex items-center gap-1">
+          {error}
+        </span>
       )}
     </div>
   );

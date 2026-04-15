@@ -32,7 +32,7 @@ public class ReviewsController : ApiController
 
     // GET /api/reviews/all
     [HttpGet("all")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,CarOwner,Renter")]
     public async Task<IActionResult> GetAllReviews() =>
         FromResult(await _reviewService.GetAllReviews());
 

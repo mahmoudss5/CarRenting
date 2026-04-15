@@ -1,16 +1,27 @@
 import BookingTabs from './BookingTabs';
 import ActiveBookingCard from './ActiveBookingCard';
 import CompletedBookingCard from './CompletedBookingCard';
+import PendingBookingCard from './PendingBookingCard';
 
 /**
- * Right content area — tabs + active booking + completed grid.
+ * Right content area — tabs + pending + active booking + completed grid.
  */
 export default function BookingsGrid({
   activeTab,
   onTabChange,
   activeBooking,
   completedBookings,
+  pendingBookings = [],
 }) {
+  const showPending   = activeTab === 'all' || activeTab === 'pending';
+  const showActive    = activeTab === 'all' || activeTab === 'upcoming';
+  const showCompleted = activeTab === 'all' || activeTab === 'completed';
+
+  const isEmpty =
+    (!showPending || pendingBookings.length === 0) &&
+    (!showActive  || !activeBooking) &&
+    (!showCompleted || completedBookings.length === 0);
+
   return (
     <section>
       {/* Page heading */}
@@ -26,13 +37,33 @@ export default function BookingsGrid({
         </p>
       </div>
 
-      <BookingTabs activeTab={activeTab} onTabChange={onTabChange} />
+      <BookingTabs
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        pendingCount={pendingBookings.length}
+      />
 
-      {/* Active/rented booking — full width */}
-      {activeBooking && <ActiveBookingCard booking={activeBooking} />}
+      {/* ── Pending Rentals ── */}
+      {showPending && pendingBookings.length > 0 && (
+        <div className="mb-8">
+          <h2 className="font-manrope font-bold text-base text-on-surface/60 uppercase tracking-[0.04em] mb-4">
+            Pending Approval
+          </h2>
+          <div className="flex flex-col gap-4">
+            {pendingBookings.map((b) => (
+              <PendingBookingCard key={b.id} booking={b} />
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Completed bookings — 2-col grid */}
-      {completedBookings.length > 0 && (
+      {/* ── Active / Rented booking ── */}
+      {showActive && activeBooking && (
+        <ActiveBookingCard booking={activeBooking} />
+      )}
+
+      {/* ── Completed bookings ── */}
+      {showCompleted && completedBookings.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {completedBookings.map((b) => (
             <CompletedBookingCard key={b.id} booking={b} />
@@ -40,8 +71,8 @@ export default function BookingsGrid({
         </div>
       )}
 
-      {/* Empty state */}
-      {!activeBooking && completedBookings.length === 0 && (
+      {/* ── Empty state ── */}
+      {isEmpty && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="font-manrope font-bold text-headline-sm text-on-surface/25 mb-2">
             No bookings yet

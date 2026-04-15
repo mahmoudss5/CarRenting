@@ -1,30 +1,11 @@
+import { FileText, ExternalLink } from "lucide-react";
 import AvatarInitials from "../../components/ui/AvatarInitials";
 import ActionButton from "../../components/ui/ActionButton";
 import TableHead from "./TableHead";
 
 const COLUMNS = ["APPLICANT", "DRIVER'S LICENSE DOCUMENT", "SUBMISSION DATE", "REVIEW ACTION"];
-
 const GHOST_ROW = "border-b border-[rgba(99,102,120,0.08)] last:border-0";
 const CELL = "px-6 py-4";
-
-function FileIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-    </svg>
-  );
-}
-
-function ExternalLinkIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-      <polyline points="15 3 21 3 21 9" />
-      <line x1="10" y1="14" x2="21" y2="3" />
-    </svg>
-  );
-}
 
 function DocLink({ name }) {
   return (
@@ -32,9 +13,9 @@ function DocLink({ name }) {
       href="#"
       className="inline-flex items-center gap-1.5 text-primary font-body text-body-md no-underline hover:underline"
     >
-      <span className="text-on-surface/30"><FileIcon /></span>
+      <FileText size={13} className="text-on-surface/30" strokeWidth={2} />
       {name}
-      <span className="text-on-surface/30"><ExternalLinkIcon /></span>
+      <ExternalLink size={11} className="text-on-surface/30" strokeWidth={2} />
     </a>
   );
 }

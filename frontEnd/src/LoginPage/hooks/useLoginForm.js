@@ -21,7 +21,8 @@ function validate(values) {
 
 function redirectByRole(role, navigate) {
   if (role === "Admin") return navigate("/admin");
-  navigate("/");
+  if (role === "CarOwner") return navigate("/owner/home");
+  navigate("/renter-home");
 }
 
 export function useLoginForm() {

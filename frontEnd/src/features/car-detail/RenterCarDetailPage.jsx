@@ -6,6 +6,7 @@ import CarDescription from './components/CarDescription';
 import OwnerCard from './components/OwnerCard';
 import ReviewsSection from './components/ReviewsSection';
 import BookingCard from './components/BookingCard';
+import RentalRequestModal from './components/RentalRequestModal';
 import { useCarDetail } from './hooks/useCarDetail';
 
 /**
@@ -13,7 +14,7 @@ import { useCarDetail } from './hooks/useCarDetail';
  * Two-column: left scrollable content + right sticky booking card.
  */
 export default function RenterCarDetailPage() {
-  const { car, booking, handlers } = useCarDetail();
+  const { car, booking, handlers, modal } = useCarDetail();
 
   return (
     <PageLayout>
@@ -46,6 +47,7 @@ export default function RenterCarDetailPage() {
           </div>
         </div>
       </div>
+      <RentalRequestModal car={car} booking={booking} {...modal} />
     </PageLayout>
   );
 }

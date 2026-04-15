@@ -1,46 +1,40 @@
+import { motion } from "framer-motion";
+import { Car, ShieldCheck, BadgeCheck } from "lucide-react";
+
 const FEATURE_CARDS = [
   {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="1" y="3" width="15" height="13" rx="2" />
-        <path d="M16 8h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-4" />
-        <circle cx="9" cy="19" r="2" />
-        <circle cx="19" cy="19" r="2" />
-      </svg>
-    ),
+    icon: Car,
     title: "100+ Premium Vehicles",
     body: "Access everything from electric city cars to vintage collectibles.",
   },
   {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-    ),
+    icon: ShieldCheck,
     title: "Verified Local Owners",
     body: "Every host is vetted for safety and exceptional service quality.",
   },
   {
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        <polyline points="9 12 11 14 15 10" />
-      </svg>
-    ),
+    icon: BadgeCheck,
     title: "Full Insurance Coverage",
     body: "Drive with peace of mind. Every trip is fully protected by our partners.",
   },
 ];
 
-function FeatureCard({ icon, title, body }) {
+function FeatureCard({ icon: Icon, title, body, index }) {
   return (
-    <div className="glass-dark rounded-lg p-4 flex items-start gap-3">
-      <div className="flex-shrink-0 text-white/70 mt-0.5">{icon}</div>
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
+      className="glass-dark rounded-lg p-4 flex items-start gap-3 border border-white/10"
+    >
+      <div className="flex-shrink-0 w-8 h-8 rounded-md bg-white/10 flex items-center justify-center text-white/80 mt-0.5">
+        <Icon size={16} strokeWidth={1.8} />
+      </div>
       <div>
         <p className="font-display font-bold text-sm text-white">{title}</p>
         <p className="font-body text-body-md text-white/55 mt-0.5 leading-snug">{body}</p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -49,19 +43,26 @@ export default function AuthSidePanel() {
     <div
       className="relative h-full w-full overflow-hidden"
       style={{
-        background:
-          "linear-gradient(160deg, #001f5c 0%, #003d9b 40%, #141b2c 100%)",
+        background: "linear-gradient(160deg, #001f5c 0%, #003d9b 40%, #141b2c 100%)",
       }}
     >
       <img
         src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=80"
         alt=""
         aria-hidden
-        className="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-luminosity"
+        className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity"
       />
 
+      {/* decorative circles */}
+      <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-primary/20 blur-3xl" />
+      <div className="absolute bottom-20 -left-10 w-40 h-40 rounded-full bg-blue-400/10 blur-2xl" />
+
       <div className="relative z-10 flex flex-col justify-between h-full p-10">
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
           <p className="font-body text-label-sm uppercase tracking-[0.05em] text-white/50 mb-2">
             Why DriveShare
           </p>
@@ -69,15 +70,19 @@ export default function AuthSidePanel() {
             The premium<br />
             <span style={{ color: "#7aadff" }}>mobility</span> platform.
           </h2>
-        </div>
+        </motion.div>
 
         <div className="flex flex-col gap-3 my-8">
-          {FEATURE_CARDS.map((card) => (
-            <FeatureCard key={card.title} {...card} />
+          {FEATURE_CARDS.map((card, i) => (
+            <FeatureCard key={card.title} {...card} index={i} />
           ))}
         </div>
 
-        <blockquote>
+        <motion.blockquote
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+        >
           <p className="font-body text-body-md text-white/70 italic leading-relaxed">
             "The most seamless car rental experience I've ever had. Truly curated and premium."
           </p>
@@ -90,7 +95,7 @@ export default function AuthSidePanel() {
               <p className="font-body text-label-sm text-white/45">Member since 2023</p>
             </div>
           </footer>
-        </blockquote>
+        </motion.blockquote>
       </div>
     </div>
   );

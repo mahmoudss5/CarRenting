@@ -11,6 +11,23 @@ export const CURRENT_USER = {
   },
 };
 
+export const PENDING_BOOKINGS = [
+  {
+    id: 'DS-55821',
+    status: 'pending',
+    car: {
+      name: 'Tesla Model S Plaid',
+      image: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=500&q=80',
+      pricePerDay: 195,
+    },
+    startDate: '2024-11-08',
+    endDate: '2024-11-11',
+    location: 'Los Angeles, CA',
+    total: 700.85,
+    submittedAt: 'Oct 28, 2024',
+  },
+];
+
 export const BOOKINGS = [
   {
     id: 'DS-99281',
