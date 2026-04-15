@@ -8,6 +8,14 @@ import OwnerHome from "./Owner/OwnerHome";
 import CreateCarPostPage from "./Owner/CreateCarPostPage";
 import OwnerProfileSettings from "./Owner/OwnerProfileSettings";
 
+// Feature pages
+import RenterHomePage from "./features/home/RenterHomePage";
+import RenterExplorePage from "./features/explore/RenterExplorePage";
+import RenterCarDetailPage from "./features/car-detail/RenterCarDetailPage";
+import RenterDashboardPage from "./features/dashboard/RenterDashboardPage";
+import RenterConfirmRequestPage from "./features/confirm-request/RenterConfirmRequestPage";
+import RenterProfileSettingsPage from "./features/profile-settings/RenterProfileSettingsPage";
+
 function App() {
   return (
     <BrowserRouter>
@@ -21,6 +29,14 @@ function App() {
         <Route path="/owner/create-post" element={<CreateCarPostPage />} />
         <Route path="/owner/settings" element={<OwnerProfileSettings />} />
         <Route path="/owner/*" element={<Navigate to="/owner/home" replace />} />
+        
+        {/* Features Routes */}
+        <Route path="/renter-home" element={<RenterHomePage />} />
+        <Route path="/renter-explore" element={<RenterExplorePage />} />
+        <Route path="/renter-car-detail/:carId" element={<RenterCarDetailPage />} />
+        <Route path="/renter-dashboard" element={<RenterDashboardPage />} />
+        <Route path="/renter-confirm-request" element={<RenterConfirmRequestPage />} />
+        <Route path="/renter-settings" element={<RenterProfileSettingsPage />} />
       </Routes>
     </BrowserRouter>
   );
