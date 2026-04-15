@@ -111,6 +111,7 @@ public class UserAdminService : IUserAdminService
             $"Your account registration was rejected. Reason: {reason}",
             referenceId: user.Id, referenceType: "User");
 
+        await _users.DeleteAsync(user);
         return ResponResult<UserActionResponseDto>.Ok(new UserActionResponseDto
         {
             Message = $"{user.Role} account rejected.",
@@ -134,6 +135,7 @@ public class UserAdminService : IUserAdminService
         if(user is null) return ResponResult<object>.NotFound("User not found.");
         user.Role = "Admin";
         await _users.UpdateAsync(user);
+        
         return ResponResult<object>.Ok(new { message = "User promoted to admin successfully.", user_id = id });
     }
 }

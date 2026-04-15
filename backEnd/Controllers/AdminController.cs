@@ -4,6 +4,7 @@ using BackEnd.DTOs.User;
 using BackEnd.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BackEnd.DTOs.Rental;
 
 namespace BackEnd.Controllers;
 
@@ -14,13 +15,18 @@ public class AdminController : ApiController
     private readonly IUserAdminService _userService;
     private readonly ICarPostService _carService;
     private readonly IDriverLicenseService _licenseService;
+    private readonly IRentalService _rentalService;
+    private readonly IAdminStatsService _statsService;
 
     public AdminController(IUserAdminService userService, ICarPostService carService,
-        IDriverLicenseService licenseService)
+        IDriverLicenseService licenseService, IRentalService rentalService,
+        IAdminStatsService statsService)
     {
         _userService = userService;
         _carService = carService;
         _licenseService = licenseService;
+        _rentalService = rentalService;
+        _statsService = statsService;
     }
 
     // ─── Users ───────────────────────────────────────────────
@@ -74,10 +80,17 @@ public class AdminController : ApiController
     public async Task<IActionResult> RejectLicense(long id, [FromBody] RejectLicenseRequestDto dto) =>
         FromResult(await _licenseService.RejectLicenseAsync(id, dto.Reason, CurrentUserId));
 
-    
-    
-    [HttpPatch("users/{id:long}/promote-to-admin")]
+    [HttpPatch("users/{id:long}/promote")]
     public async Task<IActionResult> PromoteToAdmin(long id) =>
         FromResult(await _userService.promoteToAdminAsync(id));
 
+    // ─── Stats ───────────────────────────────────────────────
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats() =>
+        FromResult(await _statsService.GetDashboardStatsAsync());
+
+    // ─── All Rentals ─────────────────────────────────────────
+    [HttpGet("rentals")]
+    public async Task<IActionResult> GetAllRentals() =>
+        FromResult(await _rentalService.GetAllRentalsAsync());
 }

@@ -1,10 +1,16 @@
+import { motion } from "framer-motion";
+import { TrendingUp, TrendingDown } from "lucide-react";
+
 export default function StatCard({ label, value, trend, trendUp = true, badge, icon: Icon }) {
   const formatted = typeof value === "number" ? value.toLocaleString("en-US") : value;
 
   return (
-    <div className="bg-surface-bright rounded-lg p-6 shadow-ambient flex flex-col gap-3">
+    <motion.div
+      whileHover={{ y: -2 }}
+      className="bg-surface-bright rounded-xl p-6 shadow-ambient border border-surface-dim flex flex-col gap-3"
+    >
       {Icon && (
-        <div className="w-10 h-10 rounded-full bg-surface-low flex items-center justify-center text-on-surface/40">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
           <Icon />
         </div>
       )}
@@ -21,10 +27,11 @@ export default function StatCard({ label, value, trend, trendUp = true, badge, i
         {trend && (
           <span
             className={[
-              "font-body font-semibold text-sm",
-              trendUp ? "text-emerald-500" : "text-[#e53935]",
+              "flex items-center gap-0.5 font-body font-semibold text-sm",
+              trendUp ? "text-emerald-600" : "text-red-500",
             ].join(" ")}
           >
+            {trendUp ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
             {trend}
           </span>
         )}
@@ -35,6 +42,6 @@ export default function StatCard({ label, value, trend, trendUp = true, badge, i
           </span>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

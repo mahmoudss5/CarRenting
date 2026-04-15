@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Car } from "lucide-react";
 import StatusChip from "../../components/ui/StatusChip";
 import ActionButton from "../../components/ui/ActionButton";
 import TableHead from "./TableHead";
@@ -10,11 +11,7 @@ const CELL = "px-6 py-4";
 function CarThumbnail() {
   return (
     <div className="w-[52px] h-9 rounded-md bg-surface-mid flex items-center justify-center shrink-0 overflow-hidden">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="text-on-surface/30">
-        <path d="M5 11l1.5-4.5a2 2 0 0 1 1.9-1.5h7.2a2 2 0 0 1 1.9 1.5L19 11" />
-        <rect x="3" y="11" width="18" height="7" rx="1.5" />
-        <circle cx="7.5" cy="18" r="1.5" /><circle cx="16.5" cy="18" r="1.5" />
-      </svg>
+      <Car size={20} className="text-on-surface/30" strokeWidth={1.6} />
     </div>
   );
 }

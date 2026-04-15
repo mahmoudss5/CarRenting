@@ -7,6 +7,7 @@ export const DASHBOARD_METRICS = [
 export const INITIAL_RENTAL_REQUESTS = [
   {
     id: "r1",
+    carPostId: "o1",
     renterName: "Marcus Thorne",
     carName: "Porsche 911 Carrera",
     dateRange: "Oct 12 - 15",
@@ -18,10 +19,12 @@ export const INITIAL_RENTAL_REQUESTS = [
       licenseNumber: "EG-DL-938421",
       submittedAt: "Oct 10, 2024",
       expiryDate: "May 2029",
+      imageUrl: "https://placehold.co/600x380/1a1a2e/ffffff?text=Driver+License+EG-DL-938421",
     },
   },
   {
     id: "r2",
+    carPostId: "o2",
     renterName: "Sarah Jenkins",
     carName: "Tesla Model S",
     dateRange: "Oct 14 - 16",
@@ -33,10 +36,12 @@ export const INITIAL_RENTAL_REQUESTS = [
       licenseNumber: "EG-DL-662510",
       submittedAt: "Oct 13, 2024",
       expiryDate: "Nov 2027",
+      imageUrl: "https://placehold.co/600x380/1a1a2e/ffffff?text=Driver+License+EG-DL-662510",
     },
   },
   {
     id: "r3",
+    carPostId: "o3",
     renterName: "Liam O'Conner",
     carName: "Land Rover Defender",
     dateRange: "Oct 18 - 22",
@@ -48,6 +53,7 @@ export const INITIAL_RENTAL_REQUESTS = [
       licenseNumber: "EG-DL-102744",
       submittedAt: "Oct 16, 2024",
       expiryDate: "Aug 2026",
+      imageUrl: "https://placehold.co/600x380/1a1a2e/ffffff?text=Driver+License+EG-DL-102744",
     },
   },
 ];

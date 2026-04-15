@@ -9,6 +9,7 @@ module.exports = {
         "on-primary": "#ffffff",
         "on-surface": "#141b2c",
         surface: "#f8f9ff",
+        background: "#f8f9ff",
         "surface-bright": "#ffffff",
         "surface-dim": "#dde0ec",
         "surface-low": "#f0f2f8",
@@ -16,6 +17,8 @@ module.exports = {
         "surface-mid": "#e8eaf2",
         "surface-high": "#dde0ec",
         "surface-highest": "#d0d4e8",
+        "surface-container": "#eef0f8",
+        "surface-container-highest": "#d0d4e8",
         "secondary-container": "#d4e3ff",
         "on-secondary": "#00235b",
         tertiary: "#7c4dff",
@@ -24,6 +27,8 @@ module.exports = {
       fontFamily: {
         display: ["Manrope", "sans-serif"],
         body: ["Inter", "sans-serif"],
+        manrope: ["Manrope", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
       },
       fontSize: {
         "display-lg": ["3.5rem", { lineHeight: "1.05", letterSpacing: "-0.02em", fontWeight: "700" }],

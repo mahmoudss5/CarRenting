@@ -10,6 +10,7 @@ export default function useOwnerDashboard() {
   const [pastRequests, setPastRequests] = useState(INITIAL_PAST_RENTALS);
   const [pendingPosts, setPendingPosts] = useState(INITIAL_POST_APPROVALS);
 
+  /* ── Rental request decisions ── */
   const takeRentalDecision = (request, decision) => {
     setNewRequests((prev) => prev.filter((item) => item.id !== request.id));
     setPastRequests((prev) => [{ ...request, decision }, ...prev]);
@@ -18,6 +19,21 @@ export default function useOwnerDashboard() {
   const acceptRentalRequest = (request) => takeRentalDecision(request, "accepted");
   const rejectRentalRequest = (request) => takeRentalDecision(request, "rejected");
 
+  /* ── License verification actions ── */
+  const updateLicenseStatus = (requestId, status) => {
+    setNewRequests((prev) =>
+      prev.map((req) =>
+        req.id === requestId
+          ? { ...req, driverLicense: { ...req.driverLicense, status } }
+          : req
+      )
+    );
+  };
+
+  const verifyLicense  = (requestId) => updateLicenseStatus(requestId, "verified");
+  const rejectLicense  = (requestId) => updateLicenseStatus(requestId, "rejected");
+
+  /* ── Summary ── */
   const postsPendingCount = pendingPosts.filter((post) => post.status === "pending").length;
 
   const summary = useMemo(
@@ -36,5 +52,7 @@ export default function useOwnerDashboard() {
     summary,
     acceptRentalRequest,
     rejectRentalRequest,
+    verifyLicense,
+    rejectLicense,
   };
 }

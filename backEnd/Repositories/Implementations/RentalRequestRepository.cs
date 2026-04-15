@@ -49,6 +49,13 @@ public class RentalRequestRepository : IRentalRequestRepository
                         && r.StartDate <= endDate
                         && r.EndDate >= startDate);
 
+    public async Task<IEnumerable<RentalRequest>> GetAllWithDetailsAsync() =>
+        await _context.RentalRequests
+            .Include(r => r.Renter).ThenInclude(r => r.User)
+            .Include(r => r.CarPost).ThenInclude(c => c.Owner).ThenInclude(o => o.User)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+
     public async Task<RentalRequest> CreateAsync(RentalRequest request)
     {
         request.CreatedAt = DateTime.UtcNow;

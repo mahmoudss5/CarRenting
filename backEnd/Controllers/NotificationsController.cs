@@ -1,3 +1,4 @@
+using BackEnd.DTOs.Notification;
 using BackEnd.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,10 @@ public class NotificationsController : ApiController
     [HttpPatch("read-all")]
     public async Task<IActionResult> MarkAllRead() =>
         FromResult(await _notificationService.MarkAllReadAsync(CurrentUserId));
+
+    [HttpGet("unread-count")]
+    public async Task<IActionResult> UnreadCount() =>
+        FromResult(await _notificationService.GetUnreadCountAsync(CurrentUserId));
 
     [HttpDelete("{id:long}")]
     public async Task<IActionResult> Delete(long id) =>

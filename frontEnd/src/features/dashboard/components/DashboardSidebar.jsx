@@ -1,11 +1,10 @@
 import UserProfileCard from './UserProfileCard';
 import AccountStats from './AccountStats';
-import LicenseVerification from './LicenseVerification';
 
 /**
- * Left sidebar — profile card + stats + license verification.
+ * Left sidebar — profile card + stats.
  */
-export default function DashboardSidebar({ user, licenseProps }) {
+export default function DashboardSidebar({ user }) {
   return (
     <aside className="flex flex-col gap-4">
       {/* Profile card */}
@@ -16,9 +15,6 @@ export default function DashboardSidebar({ user, licenseProps }) {
         <UserProfileCard user={user} />
         <AccountStats stats={user.stats} />
       </div>
-
-      {/* License card */}
-      <LicenseVerification {...licenseProps} />
     </aside>
   );
 }

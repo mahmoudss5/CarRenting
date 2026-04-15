@@ -299,6 +299,25 @@ public class RentalService : IRentalService
         });
     }
 
+    public async Task<ResponResult<IEnumerable<AdminRentalDto>>> GetAllRentalsAsync()
+    {
+        var requests = await _rentals.GetAllWithDetailsAsync();
+        var items = requests.Select(r => new AdminRentalDto
+        {
+            RequestId   = r.Id,
+            RenterName  = $"{r.Renter.User.FirstName} {r.Renter.User.LastName}".Trim(),
+            CarTitle    = r.CarPost.Title,
+            OwnerName   = $"{r.CarPost.Owner.User.FirstName} {r.CarPost.Owner.User.LastName}".Trim(),
+            StartDate   = r.StartDate,
+            EndDate     = r.EndDate,
+            TotalPrice  = r.TotalPrice,
+            Status      = r.Status,
+            RequestedAt = r.CreatedAt
+        });
+
+        return ResponResult<IEnumerable<AdminRentalDto>>.Ok(items);
+    }
+
     public async Task<ResponResult<object>> CancelRentalAsync(long id, long userId)
     {
         var request = await _rentals.GetByIdWithDetailsAsync(id);

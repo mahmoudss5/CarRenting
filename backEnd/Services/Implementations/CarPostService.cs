@@ -3,6 +3,7 @@ using BackEnd.DTOs.Car;
 using BackEnd.Models;
 using BackEnd.Repositories.Interfaces;
 using BackEnd.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 
 namespace BackEnd.Services.Implementations;
 
@@ -13,16 +14,21 @@ public class CarPostService : ICarPostService
     private readonly IReviewRepository _reviews;
     private readonly IAdminActionRepository _adminActions;
     private readonly INotificationService _notifications;
+    private readonly ICarImageRepository _carImages;
+    private readonly IFileStorageService _fileStorage;
 
     public CarPostService(ICarPostRepository carPosts, ICarOwnerRepository carOwners,
         IReviewRepository reviews, IAdminActionRepository adminActions,
-        INotificationService notifications)
+        INotificationService notifications, ICarImageRepository carImages,
+        IFileStorageService fileStorage)
     {
         _carPosts = carPosts;
         _carOwners = carOwners;
         _reviews = reviews;
         _adminActions = adminActions;
         _notifications = notifications;
+        _carImages = carImages;
+        _fileStorage = fileStorage;
     }
 
     public async Task<ResponResult<object>> GetActiveListingsAsync(int page, int pageSize)
@@ -248,6 +254,73 @@ public class CarPostService : ICarPostService
             PostId = car.Id,
             ApprovalStatus = "Rejected"
         });
+    }
+
+    public async Task<ResponResult<CarImageDto>> AddCarImageAsync(long carPostId, IFormFile image, bool isPrimary, long userId)
+    {
+        var car = await _carPosts.GetByIdAsync(carPostId);
+        if (car is null) return ResponResult<CarImageDto>.NotFound("Car post not found.");
+
+        var owner = await _carOwners.GetByUserIdAsync(userId);
+        if (owner is null || car.OwnerId != owner.Id)
+            return ResponResult<CarImageDto>.Forbidden("You can only add images to your own posts.");
+
+        var existingImages = await _carImages.GetByCarPostIdAsync(carPostId);
+        var imageList = existingImages.ToList();
+
+        if (isPrimary)
+        {
+            foreach (var img in imageList)
+            {
+                img.IsPrimary = false;
+                await _carImages.CreateAsync(img);
+            }
+        }
+
+        string imageUrl;
+        try
+        {
+            imageUrl = await _fileStorage.SaveAsync(image, $"cars/{carPostId}");
+        }
+        catch (ArgumentException ex)
+        {
+            return ResponResult<CarImageDto>.Fail(ex.Message);
+        }
+
+        var carImage = await _carImages.CreateAsync(new CarImage
+        {
+            CarPostId = carPostId,
+            ImageUrl  = imageUrl,
+            IsPrimary = isPrimary || imageList.Count == 0,
+            SortOrder = (byte)imageList.Count
+        });
+
+        return ResponResult<CarImageDto>.Created(new CarImageDto
+        {
+            ImageId   = carImage.Id,
+            ImageUrl  = carImage.ImageUrl,
+            IsPrimary = carImage.IsPrimary,
+            SortOrder = carImage.SortOrder
+        });
+    }
+
+    public async Task<ResponResult<object>> DeleteCarImageAsync(long carPostId, long imageId, long userId)
+    {
+        var car = await _carPosts.GetByIdAsync(carPostId);
+        if (car is null) return ResponResult<object>.NotFound("Car post not found.");
+
+        var owner = await _carOwners.GetByUserIdAsync(userId);
+        if (owner is null || car.OwnerId != owner.Id)
+            return ResponResult<object>.Forbidden("You can only delete images from your own posts.");
+
+        var image = await _carImages.GetByIdAsync(imageId);
+        if (image is null || image.CarPostId != carPostId)
+            return ResponResult<object>.NotFound("Image not found.");
+
+        _fileStorage.Delete(image.ImageUrl);
+        await _carImages.DeleteAsync(image);
+
+        return ResponResult<object>.Ok(new { message = "Image deleted successfully.", image_id = imageId });
     }
 
     private static string MapApprovalStatus(string postStatus) => postStatus switch

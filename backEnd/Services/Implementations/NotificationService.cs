@@ -37,6 +37,12 @@ public class NotificationService : INotificationService
         });
     }
 
+    public async Task<ResponResult<object>> GetUnreadCountAsync(long userId)
+    {
+        var count = await _repo.CountUnreadAsync(userId);
+        return ResponResult<object>.Ok(new { unread_count = count });
+    }
+
     public async Task<ResponResult<object>> MarkReadAsync(long notificationId, long userId)
     {
         var notification = await _repo.GetByIdAsync(notificationId);
