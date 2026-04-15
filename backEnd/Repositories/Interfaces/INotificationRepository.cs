@@ -12,5 +12,7 @@ public interface INotificationRepository
     Task MarkAllReadAsync(long userId);
     Task DeleteAsync(Notification notification);
     Task<int> CountAsync(long userId);
+    
+    
 }
 

@@ -67,4 +67,15 @@ public class CarsController : ApiController
     [HttpGet("{id:long}/reviews")]
     public async Task<IActionResult> GetReviews(long id) =>
         FromResult(await _reviewService.GetByCarIdAsync(id));
+
+    // ─── Images ──────────────────────────────────────────────
+    [HttpPost("{id:long}/images")]
+    [Authorize(Roles = "CarOwner")]
+    public async Task<IActionResult> AddImage(long id, IFormFile image, [FromQuery] bool isPrimary = false) =>
+        FromResult(await _carService.AddCarImageAsync(id, image, isPrimary, CurrentUserId));
+
+    [HttpDelete("{id:long}/images/{imageId:long}")]
+    [Authorize(Roles = "CarOwner")]
+    public async Task<IActionResult> DeleteImage(long id, long imageId) =>
+        FromResult(await _carService.DeleteCarImageAsync(id, imageId, CurrentUserId));
 }

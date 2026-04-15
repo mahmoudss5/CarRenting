@@ -100,6 +100,48 @@ public class AuthService : IAuthService
         });
     }
 
+    public async Task<ResponResult<MeResponseDto>> UpdateProfileAsync(long userId, UpdateProfileRequestDto dto)
+    {
+        var user = await _users.GetByIdAsync(userId);
+        if (user is null) return ResponResult<MeResponseDto>.NotFound("User not found.");
+
+        if (dto.FullName is not null)
+        {
+            var parts = dto.FullName.Trim().Split(' ', 2);
+            user.FirstName = parts[0];
+            user.LastName  = parts.Length > 1 ? parts[1] : "";
+        }
+
+        if (dto.PhoneNumber is not null)
+            user.PhoneNumber = dto.PhoneNumber;
+
+        await _users.UpdateAsync(user);
+
+        return ResponResult<MeResponseDto>.Ok(new MeResponseDto
+        {
+            UserId    = user.Id,
+            FullName  = $"{user.FirstName} {user.LastName}".Trim(),
+            Email     = user.Email,
+            Role      = user.Role,
+            Status    = user.AccountStatus,
+            CreatedAt = user.CreatedAt
+        });
+    }
+
+    public async Task<ResponResult<object>> ChangePasswordAsync(long userId, ChangePasswordRequestDto dto)
+    {
+        var user = await _users.GetByIdAsync(userId);
+        if (user is null) return ResponResult<object>.NotFound("User not found.");
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
+            return ResponResult<object>.Fail("Current password is incorrect.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        await _users.UpdateAsync(user);
+
+        return ResponResult<object>.Ok(new { message = "Password changed successfully." });
+    }
+
     private static UserAuthDto MapToAuthDto(User u) => new()
     {
         UserId = u.Id,

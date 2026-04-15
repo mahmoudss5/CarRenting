@@ -15,4 +15,6 @@ public interface ICarPostService
     Task<ResponResult<object>> GetPendingCarsAsync();
     Task<ResponResult<AdminCarActionResponseDto>> ApproveCarAsync(long id, long adminId);
     Task<ResponResult<AdminCarActionResponseDto>> RejectCarAsync(long id, string reason, long adminId);
+    Task<ResponResult<CarImageDto>> AddCarImageAsync(long carPostId, IFormFile image, bool isPrimary, long userId);
+    Task<ResponResult<object>> DeleteCarImageAsync(long carPostId, long imageId, long userId);
 }

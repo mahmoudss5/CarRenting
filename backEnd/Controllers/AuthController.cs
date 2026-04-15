@@ -29,4 +29,14 @@ public class AuthController : ApiController
     [Authorize]
     public async Task<IActionResult> Me() =>
         FromResult(await _auth.GetMeAsync(CurrentUserId));
+
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequestDto dto) =>
+        FromResult(await _auth.UpdateProfileAsync(CurrentUserId, dto));
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto dto) =>
+        FromResult(await _auth.ChangePasswordAsync(CurrentUserId, dto));
 }

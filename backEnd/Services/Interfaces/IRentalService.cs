@@ -13,4 +13,5 @@ public interface IRentalService
     Task<ResponResult<RentalActionResponseDto>> RejectRentalAsync(long id, string reason, long userId);
     Task<ResponResult<RentalActionResponseDto>> CompleteRentalAsync(long id, long userId, string userRole);
     Task<ResponResult<object>> CancelRentalAsync(long id, long userId);
+    Task<ResponResult<IEnumerable<AdminRentalDto>>> GetAllRentalsAsync();
 }
