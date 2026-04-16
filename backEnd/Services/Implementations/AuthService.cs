@@ -1,6 +1,7 @@
 using BackEnd.Common;
 using BackEnd.DTOs.Auth;
 using BackEnd.Models;
+using BackEnd.Models.DataTypes;
 using BackEnd.Repositories.Interfaces;
 using BackEnd.Services.Interfaces;
 
@@ -41,7 +42,8 @@ public class AuthService : IAuthService
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role,
-
+          //TODO: Add account status logic
+            AccountStatus = accountStatus
         };
 
         user = await _users.CreateAsync(user);

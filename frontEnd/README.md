@@ -1,70 +1,75 @@
-# Getting Started with Create React App
+# Car Rental — Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React 19 single-page application built with Vite, Tailwind CSS, Framer Motion, and React Router v7.
 
-## Available Scripts
+## Stack
 
-In the project directory, you can run:
+| Package | Version | Purpose |
+|---------|---------|---------|
+| react | 19 | UI library |
+| react-router-dom | 7 | Client-side routing with animated page transitions |
+| vite | 8 | Dev server & build tool |
+| tailwindcss | 3 | Utility-first styling |
+| framer-motion | 12 | Page transition animations |
+| lucide-react | latest | Icon set |
+| axios | **1.15.0** | HTTP client (pinned — post supply-chain-attack safe release) |
 
-### `npm start`
+## Getting Started
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # production build → dist/
+npm run preview    # preview the production build locally
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Set the backend URL if needed (defaults to `http://localhost:5000`):
 
-### `npm test`
+```bash
+# .env.local
+VITE_API_URL=http://localhost:5000
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Project Structure
 
-### `npm run build`
+```
+src/
+├── lib/
+│   ├── auth.js             # saveAuth / getToken / getUser / clearAuth
+│   └── apiClient.js        # Axios instance — JWT interceptor + 401 redirect
+├── services/               # One file per API domain
+│   ├── authService.js
+│   ├── carService.js
+│   ├── rentalService.js
+│   ├── renterService.js
+│   ├── ownerService.js
+│   ├── reviewService.js
+│   ├── adminService.js
+│   └── notificationService.js
+├── features/               # Route-level feature folders (components + hooks + data)
+│   ├── home/
+│   ├── explore/
+│   ├── car-detail/
+│   ├── confirm-request/
+│   ├── dashboard/
+│   ├── profile-settings/
+│   └── admin/
+├── Admin/                  # Admin pages & layout
+├── Owner/                  # Owner pages & layout
+├── HomePage/               # Public landing page
+├── LoginPage/
+├── SignupPage/
+├── shared/                 # Reusable layouts, Navbar, Footer, StatusChip
+├── components/             # Generic UI primitives
+├── design/                 # Design tokens
+└── App.jsx                 # Router + animated routes
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Authentication
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+JWTs are stored in `sessionStorage` via `src/lib/auth.js`.  
+The `apiClient` automatically attaches the token as `Authorization: Bearer <token>` on every request and redirects to `/login` on a `401` response.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Building for Docker
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The `Dockerfile` in this folder builds the Vite output with `npm run build` and serves it. The Docker Compose setup maps it to port `3000`.
