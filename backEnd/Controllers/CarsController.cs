@@ -21,11 +21,13 @@ public class CarsController : ApiController
         _reviewService = reviewService;
     }
 
-    [HttpGet]
+    [HttpGet("getAll")]
+    [Authorize(Roles = "Admin,Renter")]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20) =>
         FromResult(await _carService.GetActiveListingsAsync(page, pageSize));
 
     [HttpGet("search")]
+    [Authorize(Roles = "Admin,Renter")]
     public async Task<IActionResult> Search([FromQuery] CarSearchQueryDto query) =>
         FromResult(await _carService.SearchAsync(query));
 

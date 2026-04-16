@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Car } from "lucide-react";
+import { Car, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import StatusChip from "../../components/ui/StatusChip";
 import ActionButton from "../../components/ui/ActionButton";
 import TableHead from "./TableHead";
 
-const COLUMNS = ["STATUS", "CAR MODEL", "OWNER", "DATE SUBMITTED", "ACTIONS"];
+const PENDING_COLUMNS = ["STATUS", "CAR MODEL", "OWNER", "PRICE / DAY", "DATE SUBMITTED", "ACTIONS"];
+const APPROVED_COLUMNS = ["STATUS", "CAR MODEL", "OWNER", "PRICE / DAY", "DATE SUBMITTED"];
 const GHOST_ROW = "border-b border-[rgba(99,102,120,0.08)] last:border-0";
 const CELL = "px-6 py-4";
 
@@ -32,11 +34,18 @@ function TabButton({ label, active, onClick }) {
   );
 }
 
-export default function CarPostsTable({ carPosts, onApprove, onReject }) {
+function EmptyState({ message }) {
+  return (
+    <p className="px-6 pb-6 font-body text-body-md text-on-surface/40">{message}</p>
+  );
+}
+
+export default function CarPostsTable({ carPosts, approvedCars = [], onApprove, onReject }) {
   const [activeTab, setActiveTab] = useState("pending");
 
   return (
     <>
+      {/* Tab bar */}
       <div className="flex items-center gap-2 px-6 pb-4">
         <TabButton
           label={`Pending (${carPosts.length})`}
@@ -44,54 +53,101 @@ export default function CarPostsTable({ carPosts, onApprove, onReject }) {
           onClick={() => setActiveTab("pending")}
         />
         <TabButton
-          label="Approved"
+          label={`Approved (${approvedCars.length})`}
           active={activeTab === "approved"}
           onClick={() => setActiveTab("approved")}
         />
       </div>
 
-      {activeTab === "approved" ? (
-        <p className="px-6 pb-6 font-body text-body-md text-on-surface/40">
-          No approved car posts yet.
-        </p>
-      ) : carPosts.length === 0 ? (
-        <p className="px-6 pb-6 font-body text-body-md text-on-surface/40">
-          No pending car posts.
-        </p>
-      ) : (
-        <table className="w-full">
-          <TableHead columns={COLUMNS} />
-          <tbody>
-            {carPosts.map((c) => (
-              <tr key={c.id} className={GHOST_ROW}>
-                <td className={CELL}>
-                  <StatusChip label="Pending" variant="pending" />
-                </td>
-                <td className={CELL}>
-                  <div className="flex items-center gap-3">
-                    <CarThumbnail />
-                    <span className="font-body font-semibold text-body-md text-on-surface">
-                      {c.carModel}
-                    </span>
-                  </div>
-                </td>
-                <td className={`${CELL} font-body text-body-md text-on-surface/55`}>
-                  {c.owner}
-                </td>
-                <td className={`${CELL} font-body text-body-md text-on-surface/55`}>
-                  {c.dateSubmitted}
-                </td>
-                <td className={CELL}>
-                  <div className="flex items-center gap-2">
-                    <ActionButton label="Review" variant="review" />
-                    <ActionButton label="Approve" variant="approve" onClick={() => onApprove(c.id)} />
-                    <ActionButton label="Reject" variant="reject" onClick={() => onReject(c.id)} />
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Pending tab */}
+      {activeTab === "pending" && (
+        carPosts.length === 0 ? (
+          <EmptyState message="No pending car posts — all caught up! 🎉" />
+        ) : (
+          <table className="w-full">
+            <TableHead columns={PENDING_COLUMNS} />
+            <tbody>
+              {carPosts.map((c) => (
+                <tr key={c.id} className={GHOST_ROW}>
+                  <td className={CELL}>
+                    <StatusChip label="Pending" variant="pending" />
+                  </td>
+                  <td className={CELL}>
+                    <div className="flex items-center gap-3">
+                      <CarThumbnail />
+                      <span className="font-body font-semibold text-body-md text-on-surface">
+                        {c.carModel}
+                      </span>
+                    </div>
+                  </td>
+                  <td className={`${CELL} font-body text-body-md text-on-surface/55`}>
+                    {c.owner}
+                  </td>
+                  <td className={`${CELL} font-body text-body-md text-on-surface/55`}>
+                    {c.pricePerDay}
+                  </td>
+                  <td className={`${CELL} font-body text-body-md text-on-surface/55`}>
+                    {c.dateSubmitted}
+                  </td>
+                  <td className={CELL}>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        to={`/renter-car-detail/${c.id}`}
+                        className="inline-flex items-center gap-1 font-body text-label-sm text-primary font-semibold hover:underline no-underline"
+                        title="View car detail"
+                      >
+                        <ExternalLink size={12} strokeWidth={2} />
+                        Review
+                      </Link>
+                      <ActionButton label="Approve" variant="approve" onClick={() => onApprove(c.id)} />
+                      <ActionButton label="Reject" variant="reject" onClick={() => onReject(c.id)} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      )}
+
+      {/* Approved tab */}
+      {activeTab === "approved" && (
+        approvedCars.length === 0 ? (
+          <EmptyState message="No approved car posts yet." />
+        ) : (
+          <table className="w-full">
+            <TableHead columns={APPROVED_COLUMNS} />
+            <tbody>
+              {approvedCars.map((c) => (
+                <tr key={c.id} className={GHOST_ROW}>
+                  <td className={CELL}>
+                    <StatusChip label="Approved" variant="verified" />
+                  </td>
+                  <td className={CELL}>
+                    <div className="flex items-center gap-3">
+                      <CarThumbnail />
+                      <Link
+                        to={`/renter-car-detail/${c.id}`}
+                        className="font-body font-semibold text-body-md text-primary hover:underline no-underline"
+                      >
+                        {c.carModel}
+                      </Link>
+                    </div>
+                  </td>
+                  <td className={`${CELL} font-body text-body-md text-on-surface/55`}>
+                    {c.owner}
+                  </td>
+                  <td className={`${CELL} font-body text-body-md text-on-surface/55`}>
+                    {c.pricePerDay}
+                  </td>
+                  <td className={`${CELL} font-body text-body-md text-on-surface/55`}>
+                    {c.dateSubmitted}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
       )}
     </>
   );

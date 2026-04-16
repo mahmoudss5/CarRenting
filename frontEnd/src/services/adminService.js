@@ -83,6 +83,16 @@ export async function getPendingCars() {
 }
 
 /**
+ * GET /api/admin/cars  [Requires Auth: Admin]
+ * Get ALL car posts (any approval status) for the admin overview.
+ */
+export async function getAdminAllCars() {
+  const { data } = await apiClient.get("/api/admin/cars");
+  return data;
+  // [{ post_id, owner_name, title, car_type, brand, location, rental_price, approval_status, created_at }]
+}
+
+/**
  * PATCH /api/admin/cars/:id/approve  [Requires Auth: Admin]
  * Approve a car listing.
  */

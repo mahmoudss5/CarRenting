@@ -43,6 +43,7 @@ public class CarPostService : ICarPostService
 
         return ResponResult<object>.Ok(new { cars = items, total, page });
     }
+    
 
     public async Task<ResponResult<CarDetailDto>> GetByIdAsync(long id)
     {
@@ -51,6 +52,7 @@ public class CarPostService : ICarPostService
 
         return ResponResult<CarDetailDto>.Ok(MapToDetail(car));
     }
+    
 
     public async Task<ResponResult<object>> SearchAsync(CarSearchQueryDto query)
     {
@@ -91,7 +93,6 @@ public class CarPostService : ICarPostService
         };
 
         car = await _carPosts.CreateAsync(car);
-
         return ResponResult<CarPostCreatedDto>.Created(new CarPostCreatedDto
         {
             Message = "Car post created. Awaiting admin approval.",

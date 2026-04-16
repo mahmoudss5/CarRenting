@@ -1,51 +1,103 @@
 import { useState, useEffect, useMemo } from "react";
-import { getOwnerRentals, acceptRental, rejectRental } from "../../services/ownerService";
+import { getOwnerRentals, acceptRental, rejectRental, getMyCars } from "../../services/ownerService";
 
 function mapRental(r) {
   return {
     id: String(r.request_id),
-    carPostId: String(r.post_id ?? ''),
-    renterName: r.renter_name,
-    carName: r.car_title,
-    dateRange: `${r.start_date} - ${r.end_date}`,
+    carPostId: String(r.post_id ?? ""),
+    renterName: r.renter_name ?? "Unknown Renter",
+    carName: r.car_title ?? "—",
+    dateRange: `${r.start_date ?? "?"} - ${r.end_date ?? "?"}`,
     startDate: r.start_date,
     endDate: r.end_date,
     totalPrice: r.total_price,
     type: "new",
     status: (r.status ?? "").toLowerCase(),
+    // Use status as the display label for past decisions
+    decision: (r.status ?? "").toLowerCase(),
     requestedAt: r.requested_at,
-    // License info not in OwnerRentalDto — show a placeholder
-    driverLicense: { status: "unknown", licenseNumber: "—", submittedAt: "—", expiryDate: "—", imageUrl: null },
-    pickupLocation: "",
-    totalDays: 0,
+    // License info is not in OwnerRentalDto — shown as placeholder
+    driverLicense: {
+      status: "unknown",
+      licenseNumber: "—",
+      submittedAt: "—",
+      expiryDate: "—",
+      imageUrl: null,
+    },
+    pickupLocation: r.location ?? "—",
+    totalDays: r.start_date && r.end_date
+      ? Math.max(
+          1,
+          Math.ceil(
+            (new Date(r.end_date) - new Date(r.start_date)) / (1000 * 60 * 60 * 24)
+          )
+        )
+      : 0,
+  };
+}
+
+function mapPost(c) {
+  return {
+    id: String(c.post_id),
+    carName: c.title ?? "Car Listing",
+    pricePerDay: Number(c.rental_price ?? 0),
+    submittedAt: c.created_at
+      ? new Date(c.created_at).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "—",
+    approvalStatus: (c.approval_status ?? "pending").toLowerCase(),
+    rentalStatus: (c.rental_status ?? "available").toLowerCase(),
   };
 }
 
 export default function useOwnerDashboard() {
   const [rentals, setRentals] = useState([]);
+  const [allPosts, setAllPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchRentals = () => {
+  const fetchAll = () => {
     setIsLoading(true);
-    getOwnerRentals()
-      .then((data) => setRentals(Array.isArray(data) ? data.map(mapRental) : []))
+    setError(null);
+    Promise.all([
+      getOwnerRentals().catch(() => []),
+      getMyCars().catch(() => []),
+    ])
+      .then(([rentalsData, carsData]) => {
+        setRentals(Array.isArray(rentalsData) ? rentalsData.map(mapRental) : []);
+        setAllPosts(Array.isArray(carsData) ? carsData.map(mapPost) : []);
+      })
       .catch((err) => {
         console.error(err);
-        setError("Failed to load rentals.");
+        setError("Failed to load dashboard data.");
       })
       .finally(() => setIsLoading(false));
   };
 
-  useEffect(() => { fetchRentals(); }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   const newRequests  = rentals.filter((r) => r.status === "pending");
-  const pastRequests = rentals.filter((r) => ["accepted", "rejected", "completed", "cancelled"].includes(r.status));
+  const pastRequests = rentals.filter((r) =>
+    ["accepted", "rejected", "completed", "cancelled"].includes(r.status)
+  );
+
+  // Posts pending admin approval
+  const pendingPosts = allPosts.filter((p) => p.approvalStatus === "pending");
+
+  const summary = useMemo(() => ({
+    pendingApprovalCount: pendingPosts.length,
+    newRequestCount: newRequests.length,
+    pastRequestCount: pastRequests.length,
+    totalActivePosts: allPosts.filter((p) => p.approvalStatus === "approved").length,
+  }), [pendingPosts.length, newRequests.length, pastRequests.length, allPosts.length]);
 
   const acceptRentalRequest = async (request) => {
     try {
       await acceptRental(request.id);
-      fetchRentals();
+      fetchAll();
     } catch (err) {
       console.error("Accept failed:", err);
     }
@@ -54,28 +106,21 @@ export default function useOwnerDashboard() {
   const rejectRentalRequest = async (request) => {
     try {
       await rejectRental(request.id, "Rejected by owner.");
-      fetchRentals();
+      fetchAll();
     } catch (err) {
       console.error("Reject failed:", err);
     }
   };
 
-  const summary = useMemo(
-    () => ({
-      pendingApprovalCount: 0,
-      newRequestCount: newRequests.length,
-      pastRequestCount: pastRequests.length,
-    }),
-    [newRequests.length, pastRequests.length],
-  );
-
   return {
     newRequests,
     pastRequests,
-    pendingPosts: [],
+    pendingPosts,        // ← now populated from real API
+    allPosts,
     summary,
     isLoading,
     error,
+    refetch: fetchAll,
     acceptRentalRequest,
     rejectRentalRequest,
     verifyLicense: () => {},

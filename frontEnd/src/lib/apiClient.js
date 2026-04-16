@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getToken, clearAuth } from "./auth";
+import { webSocketService } from "../services/WebSocketService";
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
 
@@ -23,6 +24,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       clearAuth();
+      webSocketService.disconnect();
       window.location.href = "/login";
     }
     return Promise.reject(error);

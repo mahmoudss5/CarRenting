@@ -31,8 +31,8 @@ export default function RenterProfileSettingsPage() {
 
   return (
     <PageLayout>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-10 py-12">
+      <div className="min-h-screen bg-slate-50">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-6 md:px-10 py-10">
           <ProfileSettingsHeader fullName={fullName} email={profileForm.email} />
 
           <PersonalInfoForm

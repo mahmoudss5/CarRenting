@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { Toaster } from "sonner";
+import { NotificationProvider } from "./features/notifications/NotificationContext";
 import HomePage from "./HomePage/HomePage";
 import LoginPage from "./LoginPage/LoginPage";
 import SignupPage from "./SignupPage/SignupPage";
@@ -70,7 +72,17 @@ function App() {
   console.log("from the app function")
   return (
     <BrowserRouter>
-      <AnimatedRoutes />
+      <NotificationProvider>
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{
+            style: { fontFamily: "Inter, sans-serif" },
+          }}
+        />
+        <AnimatedRoutes />
+      </NotificationProvider>
     </BrowserRouter>
   );
 }

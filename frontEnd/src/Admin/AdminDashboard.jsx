@@ -29,7 +29,7 @@ const stagger = {
 };
 
 export default function AdminDashboard() {
-  const { stats, verifications, users, carPosts, handlers, isLoading } = useAdminApproval();
+  const { stats, verifications, users, carPosts, approvedCars, handlers, isLoading, error, refetch } = useAdminApproval();
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
@@ -43,6 +43,18 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-3 mb-8 py-3 px-5 bg-surface-bright rounded-lg shadow-ambient w-fit">
               <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
               <span className="font-body text-body-md text-on-surface/50">Loading dashboard…</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center justify-between gap-4 mb-8 py-3 px-5 bg-red-50 border border-red-200 rounded-lg">
+              <span className="font-body text-body-md text-red-700">{error}</span>
+              <button
+                onClick={refetch}
+                className="font-body text-body-md text-red-700 font-semibold hover:underline"
+              >
+                Retry
+              </button>
             </div>
           )}
 
@@ -120,9 +132,13 @@ export default function AdminDashboard() {
             {/* Manage Car Posts */}
             <motion.div variants={fadeUp}>
               <SectionCard className="mb-10">
-                <SectionHeader title="Manage Car Posts" />
+                <SectionHeader
+                  title="Manage Car Posts"
+                  badge={`${carPosts.length} Pending`}
+                />
                 <CarPostsTable
                   carPosts={carPosts}
+                  approvedCars={approvedCars}
                   onApprove={handlers.approveCar}
                   onReject={handlers.rejectCar}
                 />

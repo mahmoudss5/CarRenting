@@ -23,7 +23,7 @@ export default function RenterDashboardPage() {
     <div className="min-h-screen bg-surface flex flex-col">
       <Navbar />
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-10 py-10">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-10 pt-[65px] pb-10">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
