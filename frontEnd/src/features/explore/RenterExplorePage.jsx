@@ -18,6 +18,8 @@ export default function RenterExplorePage() {
     totalPages,
     cars,
     totalCount,
+    isLoading,
+    error,
     setActiveCategory,
     toggleMultiFilter,
     setPriceRange,
@@ -51,7 +53,13 @@ export default function RenterExplorePage() {
                 onSortChange={setSort}
               />
 
-              <CarGrid cars={cars} />
+              {isLoading ? (
+                <p className="font-body text-on-surface/50 py-16 text-center">Loading cars…</p>
+              ) : error ? (
+                <p className="font-body text-red-500 py-16 text-center">{error}</p>
+              ) : (
+                <CarGrid cars={cars} />
+              )}
 
               <Pagination
                 currentPage={currentPage}

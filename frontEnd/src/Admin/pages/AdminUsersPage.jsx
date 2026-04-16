@@ -1,10 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Users, Search, UserCheck, UserX, Shield } from "lucide-react";
 import AdminLayout from "../AdminLayout";
-import { INITIAL_USERS } from "../mockData";
 import AvatarInitials from "../../components/ui/AvatarInitials";
 import ActionButton from "../../components/ui/ActionButton";
+import { getAllUsers, approveUser, rejectUser } from "../../services/adminService";
+
+function mapUser(u) {
+  const name = u.full_name ?? "";
+  const statusRaw = (u.status ?? "").toLowerCase();
+  const status =
+    statusRaw === "approved" ? "active" :
+    statusRaw === "pending"  ? "pending" : "suspended";
+  return {
+    id: String(u.user_id),
+    initials: name.slice(0, 2).toUpperCase() || "??",
+    fullName: name,
+    email: u.email ?? "",
+    role: u.role === "CarOwner" ? "Owner" : u.role,
+    status,
+    dateRegistered: u.created_at
+      ? new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "—",
+  };
+}
 
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } } };
@@ -21,13 +40,6 @@ const ROLE_STYLES = {
 };
 
 const TABS = ["all", "pending", "active", "suspended"];
-
-const SUMMARY = [
-  { label: "Total Users",  value: String(INITIAL_USERS.length),                                                     gradient: "linear-gradient(135deg,#1d4ed8,#3b82f6)", icon: Users     },
-  { label: "Active",       value: String(INITIAL_USERS.filter((u) => u.status === "active").length),                gradient: "linear-gradient(135deg,#059669,#34d399)", icon: UserCheck },
-  { label: "Pending",      value: String(INITIAL_USERS.filter((u) => u.status === "pending").length),               gradient: "linear-gradient(135deg,#d97706,#f59e0b)", icon: Shield    },
-  { label: "Suspended",    value: String(INITIAL_USERS.filter((u) => u.status === "suspended").length),             gradient: "linear-gradient(135deg,#e11d48,#f87171)", icon: UserX     },
-];
 
 function StatusBadge({ status }) {
   const s = STATUS_STYLES[status] ?? STATUS_STYLES.active;
@@ -50,9 +62,25 @@ function RoleBadge({ role }) {
 }
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    setIsLoading(true);
+    getAllUsers()
+      .then((data) => setUsers(Array.isArray(data) ? data.map(mapUser) : []))
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const SUMMARY = [
+    { label: "Total Users",  value: String(users.length),                                                    gradient: "linear-gradient(135deg,#1d4ed8,#3b82f6)", icon: Users     },
+    { label: "Active",       value: String(users.filter((u) => u.status === "active").length),               gradient: "linear-gradient(135deg,#059669,#34d399)", icon: UserCheck },
+    { label: "Pending",      value: String(users.filter((u) => u.status === "pending").length),              gradient: "linear-gradient(135deg,#d97706,#f59e0b)", icon: Shield    },
+    { label: "Suspended",    value: String(users.filter((u) => u.status === "suspended").length),            gradient: "linear-gradient(135deg,#e11d48,#f87171)", icon: UserX     },
+  ];
 
   const filtered = users.filter((u) => {
     const matchTab = activeTab === "all" || u.status === activeTab;
@@ -67,8 +95,14 @@ export default function AdminUsersPage() {
     return acc;
   }, {});
 
-  const approve  = (id) => setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "active" }    : u));
-  const suspend  = (id) => setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "suspended" } : u));
+  const approve = async (id) => {
+    await approveUser(id).catch(console.error);
+    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "active" } : u));
+  };
+  const suspend = async (id) => {
+    await rejectUser(id, "Account suspended by admin.").catch(console.error);
+    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "suspended" } : u));
+  };
 
   return (
     <AdminLayout>

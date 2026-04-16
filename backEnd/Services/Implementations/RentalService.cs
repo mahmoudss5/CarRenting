@@ -37,9 +37,9 @@ public class RentalService : IRentalService
         var renter = await _renters.GetByUserIdAsync(userId);
         if (renter is null) return ResponResult<RentalCreatedResponseDto>.Forbidden("Only Renters can submit rental requests.");
 
-        var hasLicense = await _licenses.HasVerifiedLicenseAsync(renter.Id);
-        if (!hasLicense)
-            return ResponResult<RentalCreatedResponseDto>.Forbidden("You must submit and verify your driver license before booking.");
+        var license = await _licenses.GetByRenterIdAsync(renter.Id);
+        if (license is null)
+            return ResponResult<RentalCreatedResponseDto>.Forbidden("You must submit your driver license before booking.");
 
         var car = await _carPosts.GetByIdAsync(dto.PostId);
         if (car is null) return ResponResult<RentalCreatedResponseDto>.NotFound("Car post not found.");
@@ -73,8 +73,12 @@ public class RentalService : IRentalService
 
         request = await _rentals.CreateAsync(request);
 
+        var licenseInfo = license is not null
+            ? $" Their license (#{license.LicenseNumber}, {license.IssuingCountry}) expires {license.ExpiryDate:yyyy-MM-dd}."
+            : string.Empty;
+
         await _notifications.CreateAsync(car.Owner.UserId, "NewRentalRequest",
-            $"{renter.User.FirstName} {renter.User.LastName} has requested to rent your {car.Brand} {car.Model}.",
+            $"{renter.User.FirstName} {renter.User.LastName} has requested to rent your {car.Brand} {car.Model}.{licenseInfo} Please review and accept or reject.",
             referenceId: request.Id, referenceType: "RentalRequest");
 
         return ResponResult<RentalCreatedResponseDto>.Created(new RentalCreatedResponseDto
@@ -165,7 +169,13 @@ public class RentalService : IRentalService
             EndDate = r.EndDate,
             TotalPrice = r.TotalPrice,
             Status = r.Status,
-            RequestedAt = r.CreatedAt
+            RequestedAt = r.CreatedAt,
+            LicenseNumber = r.Renter.DriverLicense?.LicenseNumber,
+            LicenseIssuingCountry = r.Renter.DriverLicense?.IssuingCountry,
+            LicenseExpiryDate = r.Renter.DriverLicense?.ExpiryDate,
+            LicenseStatus = r.Renter.DriverLicense?.VerificationStatus,
+            LicenseFrontImageUrl = r.Renter.DriverLicense?.FrontImageUrl,
+            LicenseBackImageUrl = r.Renter.DriverLicense?.BackImageUrl,
         });
 
         return ResponResult<IEnumerable<OwnerRentalDto>>.Ok(items);

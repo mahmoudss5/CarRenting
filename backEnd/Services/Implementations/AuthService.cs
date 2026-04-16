@@ -71,6 +71,7 @@ public class AuthService : IAuthService
             return ResponResult<LoginResponseDto>.Fail("Invalid email or password.", 401);
 
         if (user.AccountStatus == "Pending")
+            return ResponResult<LoginResponseDto>.Forbidden("Your account is pending approval.");
 
 
         if (user.AccountStatus == "Suspended")

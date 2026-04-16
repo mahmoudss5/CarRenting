@@ -45,6 +45,8 @@ services:
     build:
       context: ./frontEnd
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000   # browser-reachable backend URL
     container_name: frontend
     ports:
       - "3000:3000"

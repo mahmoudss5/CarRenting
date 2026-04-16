@@ -1,13 +1,24 @@
-import { useMemo, useState } from 'react';
-import { RENTER_PREFERENCES, RENTER_PROFILE } from '../data/profileSettingsData';
+import { useState, useEffect, useMemo } from 'react';
+import { getMe, updateProfile, changePassword } from '../../../services/authService';
 
-/**
- * Centralized renter profile settings state.
- * Keeps forms controlled and exposes simple handlers for presentational components.
- */
 export function useProfileSettings() {
-  const [profileForm, setProfileForm] = useState(RENTER_PROFILE);
-  const [preferenceForm, setPreferenceForm] = useState(RENTER_PREFERENCES);
+  const [profileForm, setProfileForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    city: '',
+    country: '',
+    bio: '',
+  });
+
+  const [preferenceForm, setPreferenceForm] = useState({
+    vehicleType: 'SUV',
+    transmission: 'Automatic',
+    fuelType: 'Electric',
+    notifications: true,
+  });
+
   const [securityForm, setSecurityForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -22,46 +33,65 @@ export function useProfileSettings() {
   const [preferencesMessage, setPreferencesMessage] = useState('');
   const [securityMessage, setSecurityMessage] = useState('');
 
+  // Load current user profile on mount
+  useEffect(() => {
+    getMe()
+      .then((data) => {
+        const nameParts = (data.full_name ?? '').split(' ');
+        setProfileForm((prev) => ({
+          ...prev,
+          firstName: nameParts[0] ?? '',
+          lastName: nameParts.slice(1).join(' ') ?? '',
+          email: data.email ?? '',
+          phone: data.phone_number ?? '',
+        }));
+      })
+      .catch(console.error);
+  }, []);
+
   const fullName = useMemo(
     () => `${profileForm.firstName} ${profileForm.lastName}`.trim(),
-    [profileForm.firstName, profileForm.lastName]
+    [profileForm.firstName, profileForm.lastName],
   );
 
-  const updateProfileField = (field, value) => {
+  const updateProfileField = (field, value) =>
     setProfileForm((prev) => ({ ...prev, [field]: value }));
-  };
 
-  const updatePreferenceField = (field, value) => {
+  const updatePreferenceField = (field, value) =>
     setPreferenceForm((prev) => ({ ...prev, [field]: value }));
-  };
 
-  const updateSecurityField = (field, value) => {
+  const updateSecurityField = (field, value) =>
     setSecurityForm((prev) => ({ ...prev, [field]: value }));
-  };
 
-  const saveProfile = (event) => {
+  const saveProfile = async (event) => {
     event.preventDefault();
     setIsSavingProfile(true);
     setProfileMessage('');
-
-    setTimeout(() => {
-      setIsSavingProfile(false);
+    try {
+      await updateProfile({
+        fullName: fullName,
+        phoneNumber: profileForm.phone || undefined,
+      });
       setProfileMessage('Profile details updated successfully.');
-    }, 800);
+    } catch (err) {
+      setProfileMessage(err?.response?.data?.message ?? 'Failed to update profile.');
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const savePreferences = (event) => {
     event.preventDefault();
     setIsSavingPreferences(true);
     setPreferencesMessage('');
-
+    // Preferences are local-only (no backend endpoint for them)
     setTimeout(() => {
       setIsSavingPreferences(false);
       setPreferencesMessage('Rental preferences saved.');
-    }, 800);
+    }, 400);
   };
 
-  const saveSecurity = (event) => {
+  const saveSecurity = async (event) => {
     event.preventDefault();
     setSecurityMessage('');
 
@@ -69,17 +99,24 @@ export function useProfileSettings() {
       setSecurityMessage('New password and confirmation must match.');
       return;
     }
+    if (securityForm.newPassword.length < 6) {
+      setSecurityMessage('New password must be at least 6 characters.');
+      return;
+    }
 
     setIsSavingSecurity(true);
-    setTimeout(() => {
-      setIsSavingSecurity(false);
-      setSecurityForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+    try {
+      await changePassword({
+        currentPassword: securityForm.currentPassword,
+        newPassword: securityForm.newPassword,
       });
-      setSecurityMessage('Password updated.');
-    }, 800);
+      setSecurityForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setSecurityMessage('Password updated successfully.');
+    } catch (err) {
+      setSecurityMessage(err?.response?.data?.message ?? 'Failed to update password.');
+    } finally {
+      setIsSavingSecurity(false);
+    }
   };
 
   return {

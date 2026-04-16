@@ -1,9 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ClipboardList, Search, DollarSign, Calendar } from "lucide-react";
 import AdminLayout from "../AdminLayout";
-import { INITIAL_RENTALS } from "../mockData";
 import AvatarInitials from "../../components/ui/AvatarInitials";
+import { getAllRentals } from "../../services/adminService";
+
+function mapRental(r) {
+  const status = (r.status ?? "").toLowerCase();
+  return {
+    id: String(r.request_id),
+    carModel: r.car_title ?? "—",
+    renter: r.renter_name ?? "—",
+    renterInitials: (r.renter_name ?? "??").slice(0, 2).toUpperCase(),
+    owner: r.owner_name ?? "—",
+    startDate: r.start_date ?? "—",
+    endDate: r.end_date ?? "—",
+    total: `$${Number(r.total_price ?? 0).toFixed(0)}`,
+    status: status === "accepted" ? "upcoming" : status,
+  };
+}
 
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } } };
@@ -17,12 +32,6 @@ const STATUS_STYLES = {
 
 const TABS = ["all", "upcoming", "active", "completed", "cancelled"];
 
-const SUMMARY_CARDS = [
-  { label: "Total Rentals",    value: String(INITIAL_RENTALS.length),                                                 gradient: "linear-gradient(135deg,#d97706,#f59e0b)", icon: ClipboardList },
-  { label: "Active Now",       value: String(INITIAL_RENTALS.filter((r) => r.status === "active").length),            gradient: "linear-gradient(135deg,#059669,#34d399)", icon: Calendar       },
-  { label: "Total Earnings",   value: "$3,245",                                                                        gradient: "linear-gradient(135deg,#7c3aed,#a78bfa)", icon: DollarSign      },
-  { label: "Upcoming",         value: String(INITIAL_RENTALS.filter((r) => r.status === "upcoming").length),          gradient: "linear-gradient(135deg,#1d4ed8,#3b82f6)", icon: Calendar       },
-];
 
 function StatusBadge({ status }) {
   const s = STATUS_STYLES[status] ?? STATUS_STYLES.upcoming;
@@ -36,10 +45,27 @@ function StatusBadge({ status }) {
 }
 
 export default function AdminRentalsPage() {
+  const [rentals, setRentals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
 
-  const filtered = INITIAL_RENTALS.filter((r) => {
+  useEffect(() => {
+    setIsLoading(true);
+    getAllRentals()
+      .then((data) => setRentals(Array.isArray(data) ? data.map(mapRental) : []))
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const SUMMARY_CARDS = [
+    { label: "Total Rentals", value: String(rentals.length),                                                                gradient: "linear-gradient(135deg,#d97706,#f59e0b)", icon: ClipboardList },
+    { label: "Active Now",    value: String(rentals.filter((r) => r.status === "active").length),                           gradient: "linear-gradient(135deg,#059669,#34d399)", icon: Calendar       },
+    { label: "Total Revenue", value: `$${rentals.reduce((s, r) => s + Number((r.total ?? "$0").replace("$", "")), 0).toFixed(0)}`, gradient: "linear-gradient(135deg,#7c3aed,#a78bfa)", icon: DollarSign },
+    { label: "Upcoming",      value: String(rentals.filter((r) => r.status === "upcoming").length),                         gradient: "linear-gradient(135deg,#1d4ed8,#3b82f6)", icon: Calendar       },
+  ];
+
+  const filtered = rentals.filter((r) => {
     const matchTab = activeTab === "all" || r.status === activeTab;
     const matchSearch =
       r.carModel.toLowerCase().includes(search.toLowerCase()) ||
@@ -48,9 +74,7 @@ export default function AdminRentalsPage() {
   });
 
   const counts = TABS.reduce((acc, t) => {
-    acc[t] = t === "all"
-      ? INITIAL_RENTALS.length
-      : INITIAL_RENTALS.filter((r) => r.status === t).length;
+    acc[t] = t === "all" ? rentals.length : rentals.filter((r) => r.status === t).length;
     return acc;
   }, {});
 

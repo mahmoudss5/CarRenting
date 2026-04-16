@@ -14,7 +14,27 @@ import { useCarDetail } from './hooks/useCarDetail';
  * Two-column: left scrollable content + right sticky booking card.
  */
 export default function RenterCarDetailPage() {
-  const { car, booking, handlers, modal } = useCarDetail();
+  const { car, isLoadingCar, carError, booking, handlers, modal } = useCarDetail();
+
+  if (isLoadingCar) {
+    return (
+      <PageLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p className="font-body text-on-surface/50 text-lg">Loading car details…</p>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  if (carError || !car) {
+    return (
+      <PageLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p className="font-body text-red-500 text-lg">{carError ?? 'Car not found.'}</p>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>

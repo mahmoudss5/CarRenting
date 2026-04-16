@@ -1,10 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck, FileText, ExternalLink } from "lucide-react";
 import AdminLayout from "../AdminLayout";
-import { INITIAL_VERIFICATIONS } from "../mockData";
 import AvatarInitials from "../../components/ui/AvatarInitials";
 import ActionButton from "../../components/ui/ActionButton";
+import { getAllLicenses, verifyLicense, rejectLicense } from "../../services/adminService";
+
+function mapLicense(l) {
+  const name = l.renter_name ?? "Unknown";
+  return {
+    id: String(l.license_id),
+    initials: name.slice(0, 2).toUpperCase(),
+    name,
+    email: "—",
+    documentName: l.license_number ?? "—",
+    submittedAt: l.submitted_at
+      ? new Date(l.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "—",
+    frontImageUrl: l.front_image_url ?? null,
+    backImageUrl: l.back_image_url ?? null,
+  };
+}
 
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } };
@@ -22,17 +38,34 @@ function DocLink({ name }) {
 }
 
 export default function AdminVerificationsPage() {
-  const [verifications, setVerifications] = useState(INITIAL_VERIFICATIONS);
+  const [verifications, setVerifications] = useState([]);
   const [approved, setApproved] = useState([]);
   const [rejected, setRejected] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const approve = (id) => {
+  useEffect(() => {
+    setIsLoading(true);
+    getAllLicenses()
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        const pending = list
+          .filter((l) => (l.verification_status ?? "").toLowerCase() === "pending")
+          .map(mapLicense);
+        setVerifications(pending);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const approve = async (id) => {
+    await verifyLicense(id).catch(console.error);
     const v = verifications.find((x) => x.id === id);
     setVerifications((prev) => prev.filter((x) => x.id !== id));
     setApproved((prev) => [...prev, { ...v, resolvedAt: "Just now" }]);
   };
 
-  const reject = (id) => {
+  const reject = async (id) => {
+    await rejectLicense(id, "License rejected by admin.").catch(console.error);
     const v = verifications.find((x) => x.id === id);
     setVerifications((prev) => prev.filter((x) => x.id !== id));
     setRejected((prev) => [...prev, { ...v, resolvedAt: "Just now" }]);

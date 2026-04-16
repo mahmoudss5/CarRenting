@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
-import { Car, Bell, UserCircle, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Car, Bell, LogOut } from "lucide-react";
+import { getUser, clearAuth } from "../../lib/auth";
 
 function NavIconBtn({ children, danger = false, onClick }) {
   return (
@@ -17,45 +18,41 @@ function NavIconBtn({ children, danger = false, onClick }) {
   );
 }
 
-const NAV_LINKS = [
-  { label: "Owner Dashboard", to: "/owner/home", active: false },
-  { label: "Admin Portal", to: "/admin", active: true },
-];
-
 export default function AdminNavbar() {
+  const navigate = useNavigate();
+  const user = getUser();
+
+  function handleLogout() {
+    clearAuth();
+    navigate("/login");
+  }
+
   return (
     <header className="sticky top-0 z-40 bg-surface-bright border-b border-surface-dim shadow-ambient">
       <div className="flex justify-between items-center px-8 lg:px-12 py-4">
-        <Link to="/" className="flex items-center gap-2 no-underline">
+        <Link to="/admin" className="flex items-center gap-2 no-underline">
           <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
             <Car size={14} className="text-white" strokeWidth={2} />
           </div>
           <span className="font-display font-bold text-[1.25rem] tracking-tight text-on-surface">
             Drive<span className="text-primary">Share</span>
           </span>
+          <span className="ml-1 text-xs font-body font-semibold text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
+            Admin
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-5">
-          {NAV_LINKS.map(({ label, to, active }) => (
-            <Link
-              key={to}
-              to={to}
-              className={[
-                "font-body text-body-md no-underline transition-colors",
-                active
-                  ? "text-primary font-semibold border-b-2 border-primary pb-0.5"
-                  : "text-on-surface/50 hover:text-on-surface",
-              ].join(" ")}
-            >
-              {label}
-            </Link>
-          ))}
-          <div className="flex items-center gap-1 ml-2">
+        <div className="flex items-center gap-3">
+          {user?.full_name && (
+            <span className="font-body text-body-md font-medium text-on-surface/80">
+              {user.full_name}
+            </span>
+          )}
+          <div className="flex items-center gap-1">
             <NavIconBtn><Bell size={19} strokeWidth={1.8} /></NavIconBtn>
-            <NavIconBtn><UserCircle size={19} strokeWidth={1.8} /></NavIconBtn>
-            <NavIconBtn danger><LogOut size={19} strokeWidth={1.8} /></NavIconBtn>
+            <NavIconBtn danger onClick={handleLogout}><LogOut size={19} strokeWidth={1.8} /></NavIconBtn>
           </div>
-        </nav>
+        </div>
       </div>
     </header>
   );

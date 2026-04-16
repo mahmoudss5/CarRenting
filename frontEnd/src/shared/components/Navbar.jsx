@@ -1,19 +1,31 @@
 import { useState } from "react";
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Car, Menu, X, LogIn, UserCircle, LayoutDashboard, Compass, Settings, ShieldCheck } from 'lucide-react';
+import { Car, Menu, X, LogIn, UserCircle, LayoutDashboard, Compass, Settings, ShieldCheck, LogOut } from 'lucide-react';
 import PrimaryButton from './PrimaryButton';
+import { getUser, clearAuth } from '../../lib/auth';
 
-const NAV_LINKS = [
+const BASE_LINKS = [
   { to: "/renter-home", label: "Home", icon: Car, end: true },
   { to: "/renter-explore", label: "Discover", icon: Compass },
   { to: "/renter-dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/renter-settings", label: "Settings", icon: Settings },
-  { to: "/admin", label: "Admin Portal", icon: ShieldCheck },
 ];
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const user = getUser();
+
+  const isAdmin = user?.role?.toLowerCase() === "admin";
+  const NAV_LINKS = isAdmin
+    ? [...BASE_LINKS, { to: "/admin", label: "Admin Portal", icon: ShieldCheck }]
+    : BASE_LINKS;
+
+  function handleLogout() {
+    clearAuth();
+    navigate("/login");
+  }
 
   return (
     <>
@@ -61,16 +73,36 @@ export default function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              to="/login"
-              className="flex items-center gap-1.5 font-body text-[0.9rem] font-semibold text-on-surface/70 hover:text-primary transition-colors no-underline px-3 py-2 rounded-md hover:bg-surface-low"
-            >
-              <LogIn size={15} />
-              Login
-            </Link>
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <PrimaryButton to="/signup" size="sm">Sign Up</PrimaryButton>
-            </motion.div>
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-surface-low">
+                  <UserCircle size={16} className="text-primary" strokeWidth={1.8} />
+                  <span className="font-body text-[0.9rem] font-medium text-on-surface/80">
+                    {user.full_name}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 font-body text-[0.9rem] font-semibold text-on-surface/70 hover:text-red-500 transition-colors px-3 py-2 rounded-md hover:bg-surface-low border-0 bg-transparent cursor-pointer"
+                >
+                  <LogOut size={15} />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="flex items-center gap-1.5 font-body text-[0.9rem] font-semibold text-on-surface/70 hover:text-primary transition-colors no-underline px-3 py-2 rounded-md hover:bg-surface-low"
+                >
+                  <LogIn size={15} />
+                  Login
+                </Link>
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <PrimaryButton to="/signup" size="sm">Sign Up</PrimaryButton>
+                </motion.div>
+              </>
+            )}
           </div>
 
           <button
@@ -92,6 +124,12 @@ export default function Navbar() {
             className="fixed top-[65px] left-0 right-0 z-40 glass-surface border-b border-surface-dim shadow-ambient md:hidden"
           >
             <nav className="flex flex-col px-6 py-3 gap-0.5">
+              {user && (
+                <div className="flex items-center gap-2.5 py-3 border-b border-surface-dim text-on-surface/80 font-body text-body-md font-semibold">
+                  <UserCircle size={16} strokeWidth={1.8} className="text-primary" />
+                  {user.full_name}
+                </div>
+              )}
               {NAV_LINKS.map(({ to, label, icon: Icon, end }) => (
                 <NavLink
                   key={to}
@@ -108,6 +146,24 @@ export default function Navbar() {
                   {label}
                 </NavLink>
               ))}
+              {user ? (
+                <button
+                  onClick={() => { setMobileOpen(false); handleLogout(); }}
+                  className="flex items-center gap-2.5 font-body text-body-md font-medium py-3 text-red-500 border-0 bg-transparent cursor-pointer text-left"
+                >
+                  <LogOut size={16} strokeWidth={1.8} />
+                  Logout
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2.5 font-body text-body-md font-medium no-underline py-3 text-on-surface/70 hover:text-on-surface transition-colors"
+                >
+                  <LogIn size={16} strokeWidth={1.8} />
+                  Login
+                </Link>
+              )}
             </nav>
           </motion.div>
         )}
