@@ -30,6 +30,7 @@ public class RentalRequestRepository : IRentalRequestRepository
     public async Task<IEnumerable<RentalRequest>> GetByCarOwnerIdAsync(long carOwnerId) =>
         await _context.RentalRequests
             .Include(r => r.Renter).ThenInclude(r => r.User)
+            .Include(r => r.Renter).ThenInclude(r => r.DriverLicense)
             .Include(r => r.CarPost)
             .Where(r => r.CarPost.OwnerId == carOwnerId)
             .OrderByDescending(r => r.CreatedAt)

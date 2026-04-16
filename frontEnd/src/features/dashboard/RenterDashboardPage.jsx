@@ -11,6 +11,7 @@ import { useDashboard } from './hooks/useDashboard';
 export default function RenterDashboardPage() {
   const {
     user,
+    isLoading,
     activeTab,
     setActiveTab,
     activeBooking,
@@ -23,17 +24,23 @@ export default function RenterDashboardPage() {
       <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto w-full px-10 py-10">
-        <div className="grid grid-cols-[280px_1fr] gap-10">
-          <DashboardSidebar user={user} />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-[280px_1fr] gap-10">
+            <DashboardSidebar user={user} />
 
-          <BookingsGrid
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            activeBooking={activeBooking}
-            completedBookings={completedBookings}
-            pendingBookings={pendingBookings}
-          />
-        </div>
+            <BookingsGrid
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              activeBooking={activeBooking}
+              completedBookings={completedBookings}
+              pendingBookings={pendingBookings}
+            />
+          </div>
+        )}
       </div>
 
       <Footer />

@@ -1,16 +1,16 @@
 using System.Text;
 using System.Text.Json;
 using BackEnd.Data;
+using BackEnd.Swagger;
 using BackEnd.Hubs;
 using BackEnd.Repositories.Implementations;
 using BackEnd.Repositories.Interfaces;
 using BackEnd.Services.Implementations;
 using BackEnd.Services.Interfaces;
-using BackEnd.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,19 +26,34 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "Car Rental API", Version = "v1" });
-
-    // Register the Bearer security scheme
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Car Rental API", Version = "v1" });
+    c.OperationFilter<AuthOperationFilter>();
+    // 1. Register the Bearer security scheme
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,   // ← changed from Http to ApiKey
+        Scheme = "Bearer",
         BearerFormat = "JWT",
-        Description = "Paste your JWT token below (without the 'Bearer ' prefix)."
+        In = ParameterLocation.Header,
+        Description = "Enter: Bearer {your JWT token here}"
     });
 
-    // Auto-add the padlock to every [Authorize] endpoint
-    c.OperationFilter<AuthOperationFilter>();
+    // 2. Globally apply the security requirement
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 // ─── Database ─────────────────────────────────────────────────────────────────
@@ -61,18 +76,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
         };
 
-        // SignalR WebSocket connections cannot send headers, so the token
-        // arrives as the "access_token" query-string parameter instead.
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
-                if (!string.IsNullOrEmpty(accessToken) &&
-                    context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
-                {
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                     context.Token = accessToken;
-                }
                 return Task.CompletedTask;
             }
         };
@@ -129,15 +140,14 @@ builder.Services.AddSignalR()
 
 var app = builder.Build();
 
-// Swagger available in all environments so you can test the API easily
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Car Rental API v1");
-    c.RoutePrefix = "swagger"; // access at /swagger
+    c.RoutePrefix = "swagger";
 });
 
-app.UseStaticFiles(); // serves wwwroot/uploads/* at /uploads/*
+app.UseStaticFiles();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -146,12 +156,23 @@ app.MapGet("/health", () => Results.Ok());
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-await DbSeeder.SeedAdminAsync(app.Services);
+// ─── Database Seeding & Migration ─────────────────────────────────────────────
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        if (context.Database.IsSqlServer())
+            await context.Database.MigrateAsync();
+
+        await DbSeeder.SeedAdminAsync(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+    }
+}
 
 app.Run();
-
-
-/*
-netstat -ano | findstr :5000 
-taskkill /PID <PID> /F
-*/

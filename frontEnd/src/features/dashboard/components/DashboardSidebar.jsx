@@ -5,6 +5,8 @@ import AccountStats from './AccountStats';
  * Left sidebar — profile card + stats.
  */
 export default function DashboardSidebar({ user }) {
+  if (!user) return null;
+
   return (
     <aside className="flex flex-col gap-4">
       {/* Profile card */}

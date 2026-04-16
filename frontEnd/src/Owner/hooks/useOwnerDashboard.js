@@ -1,58 +1,84 @@
-import { useMemo, useState } from "react";
-import {
-  INITIAL_PAST_RENTALS,
-  INITIAL_POST_APPROVALS,
-  INITIAL_RENTAL_REQUESTS,
-} from "../data/ownerDashboardData";
+import { useState, useEffect, useMemo } from "react";
+import { getOwnerRentals, acceptRental, rejectRental } from "../../services/ownerService";
+
+function mapRental(r) {
+  return {
+    id: String(r.request_id),
+    carPostId: String(r.post_id ?? ''),
+    renterName: r.renter_name,
+    carName: r.car_title,
+    dateRange: `${r.start_date} - ${r.end_date}`,
+    startDate: r.start_date,
+    endDate: r.end_date,
+    totalPrice: r.total_price,
+    type: "new",
+    status: (r.status ?? "").toLowerCase(),
+    requestedAt: r.requested_at,
+    // License info not in OwnerRentalDto — show a placeholder
+    driverLicense: { status: "unknown", licenseNumber: "—", submittedAt: "—", expiryDate: "—", imageUrl: null },
+    pickupLocation: "",
+    totalDays: 0,
+  };
+}
 
 export default function useOwnerDashboard() {
-  const [newRequests, setNewRequests] = useState(INITIAL_RENTAL_REQUESTS);
-  const [pastRequests, setPastRequests] = useState(INITIAL_PAST_RENTALS);
-  const [pendingPosts, setPendingPosts] = useState(INITIAL_POST_APPROVALS);
+  const [rentals, setRentals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  /* ── Rental request decisions ── */
-  const takeRentalDecision = (request, decision) => {
-    setNewRequests((prev) => prev.filter((item) => item.id !== request.id));
-    setPastRequests((prev) => [{ ...request, decision }, ...prev]);
+  const fetchRentals = () => {
+    setIsLoading(true);
+    getOwnerRentals()
+      .then((data) => setRentals(Array.isArray(data) ? data.map(mapRental) : []))
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load rentals.");
+      })
+      .finally(() => setIsLoading(false));
   };
 
-  const acceptRentalRequest = (request) => takeRentalDecision(request, "accepted");
-  const rejectRentalRequest = (request) => takeRentalDecision(request, "rejected");
+  useEffect(() => { fetchRentals(); }, []);
 
-  /* ── License verification actions ── */
-  const updateLicenseStatus = (requestId, status) => {
-    setNewRequests((prev) =>
-      prev.map((req) =>
-        req.id === requestId
-          ? { ...req, driverLicense: { ...req.driverLicense, status } }
-          : req
-      )
-    );
+  const newRequests  = rentals.filter((r) => r.status === "pending");
+  const pastRequests = rentals.filter((r) => ["accepted", "rejected", "completed", "cancelled"].includes(r.status));
+
+  const acceptRentalRequest = async (request) => {
+    try {
+      await acceptRental(request.id);
+      fetchRentals();
+    } catch (err) {
+      console.error("Accept failed:", err);
+    }
   };
 
-  const verifyLicense  = (requestId) => updateLicenseStatus(requestId, "verified");
-  const rejectLicense  = (requestId) => updateLicenseStatus(requestId, "rejected");
-
-  /* ── Summary ── */
-  const postsPendingCount = pendingPosts.filter((post) => post.status === "pending").length;
+  const rejectRentalRequest = async (request) => {
+    try {
+      await rejectRental(request.id, "Rejected by owner.");
+      fetchRentals();
+    } catch (err) {
+      console.error("Reject failed:", err);
+    }
+  };
 
   const summary = useMemo(
     () => ({
-      pendingApprovalCount: postsPendingCount,
+      pendingApprovalCount: 0,
       newRequestCount: newRequests.length,
       pastRequestCount: pastRequests.length,
     }),
-    [postsPendingCount, newRequests.length, pastRequests.length]
+    [newRequests.length, pastRequests.length],
   );
 
   return {
     newRequests,
     pastRequests,
-    pendingPosts,
+    pendingPosts: [],
     summary,
+    isLoading,
+    error,
     acceptRentalRequest,
     rejectRentalRequest,
-    verifyLicense,
-    rejectLicense,
+    verifyLicense: () => {},
+    rejectLicense: () => {},
   };
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { register } from "../../services/authService";
 
 const INITIAL_VALUES = {
   role: "",
@@ -10,12 +11,8 @@ const INITIAL_VALUES = {
 
 function validate(values) {
   const errors = {};
-  if (!values.role) {
-    errors.role = "Please select a role to continue.";
-  }
-  if (!values.fullName.trim()) {
-    errors.fullName = "Full name is required.";
-  }
+  if (!values.role) errors.role = "Please select a role to continue.";
+  if (!values.fullName.trim()) errors.fullName = "Full name is required.";
   if (!values.email) {
     errors.email = "Email is required.";
   } else if (!/\S+@\S+\.\S+/.test(values.email)) {
@@ -26,9 +23,7 @@ function validate(values) {
   } else if (values.password.length < 8) {
     errors.password = "Password must be at least 8 characters.";
   }
-  if (!values.agreedToTerms) {
-    errors.agreedToTerms = "You must agree to the Terms of Service.";
-  }
+  if (!values.agreedToTerms) errors.agreedToTerms = "You must agree to the Terms of Service.";
   return errors;
 }
 
@@ -37,7 +32,7 @@ export function useSignupForm() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState("");
-  const [successData, setSuccessData] = useState(null); // { role } when signup succeeds
+  const [successData, setSuccessData] = useState(null);
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
@@ -62,27 +57,19 @@ export function useSignupForm() {
 
     setIsLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          full_name: values.fullName,
-          email: values.email,
-          password: values.password,
-          role: values.role,
-        }),
+      await register({
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+        role: values.role,
       });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setServerError(data.error ?? "Registration failed. Please try again.");
-        return;
-      }
-
       setSuccessData({ role: values.role });
-    } catch {
-      setServerError("Unable to connect. Please try again.");
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        "Registration failed. Please try again.";
+      setServerError(msg);
     } finally {
       setIsLoading(false);
     }

@@ -31,6 +31,7 @@ public class AdminController : ApiController
 
     // ─── Users ───────────────────────────────────────────────
     [HttpGet("users")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetUsers() =>
         FromResult(await _userService.GetAllUsersAsync());
 

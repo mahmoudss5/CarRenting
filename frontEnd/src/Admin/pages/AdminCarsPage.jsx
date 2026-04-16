@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Car, Search, Filter } from "lucide-react";
+import { Car, Search } from "lucide-react";
 import AdminLayout from "../AdminLayout";
-import { INITIAL_CAR_POSTS } from "../mockData";
 import ActionButton from "../../components/ui/ActionButton";
 import AvatarInitials from "../../components/ui/AvatarInitials";
+import { getPendingCars, approveCar, rejectCar } from "../../services/adminService";
+
+function mapCar(c) {
+  return {
+    id: String(c.post_id),
+    carModel: c.title,
+    category: c.car_type ?? "—",
+    owner: c.owner_name ?? "—",
+    pricePerDay: `$${Number(c.rental_price).toFixed(0)}`,
+    dateSubmitted: c.created_at
+      ? new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : "—",
+    status: (c.approval_status ?? "pending").toLowerCase(),
+  };
+}
 
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } } };
@@ -46,13 +60,23 @@ function CategoryBadge({ category }) {
 }
 
 export default function AdminCarsPage() {
-  const [cars, setCars] = useState(INITIAL_CAR_POSTS);
-  const [activeTab, setActiveTab] = useState("all");
+  const [cars, setCars] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("pending");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    setIsLoading(true);
+    getPendingCars()
+      .then((data) => setCars(Array.isArray(data) ? data.map(mapCar) : []))
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const filtered = cars.filter((c) => {
     const matchTab = activeTab === "all" || c.status === activeTab;
-    const matchSearch = c.carModel.toLowerCase().includes(search.toLowerCase()) ||
+    const matchSearch =
+      c.carModel.toLowerCase().includes(search.toLowerCase()) ||
       c.owner.toLowerCase().includes(search.toLowerCase());
     return matchTab && matchSearch;
   });
@@ -62,8 +86,14 @@ export default function AdminCarsPage() {
     return acc;
   }, {});
 
-  const approve = (id) => setCars((prev) => prev.map((c) => c.id === id ? { ...c, status: "approved" } : c));
-  const reject  = (id) => setCars((prev) => prev.map((c) => c.id === id ? { ...c, status: "rejected" } : c));
+  const approve = async (id) => {
+    await approveCar(id).catch(console.error);
+    setCars((prev) => prev.map((c) => c.id === id ? { ...c, status: "approved" } : c));
+  };
+  const reject = async (id) => {
+    await rejectCar(id, "Rejected by admin.").catch(console.error);
+    setCars((prev) => prev.map((c) => c.id === id ? { ...c, status: "rejected" } : c));
+  };
 
   return (
     <AdminLayout>

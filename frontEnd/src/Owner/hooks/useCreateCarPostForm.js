@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createCar } from "../../services/carService";
 
 const INITIAL_FORM_STATE = {
-  ownerName: "",
   title: "",
   description: "",
   carType: "",
@@ -11,28 +12,54 @@ const INITIAL_FORM_STATE = {
   transmission: "Automatic",
   location: "",
   rentalPrice: "",
-  availabilityStart: "",
-  availabilityEnd: "",
-  ownerRentalStatus: "Pending",
 };
 
 export default function useCreateCarPostForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const updateField = (field) => (event) => {
     const { value } = event.target;
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setIsSubmitted(true);
+    setServerError("");
+    setIsSubmitting(true);
+    try {
+      await createCar({
+        title: formData.title,
+        description: formData.description || undefined,
+        carType: formData.carType,
+        brand: formData.brand,
+        model: formData.model,
+        year: Number(formData.year),
+        transmission: formData.transmission,
+        location: formData.location,
+        rentalPrice: Number(formData.rentalPrice),
+      });
+      setIsSubmitted(true);
+      setTimeout(() => navigate("/owner/home"), 2000);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        "Failed to create car post. Please try again.";
+      setServerError(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return {
     formData,
     isSubmitted,
+    isSubmitting,
+    serverError,
     updateField,
     handleSubmit,
   };

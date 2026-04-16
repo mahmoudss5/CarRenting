@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace BackEnd.Swagger;
@@ -18,13 +18,21 @@ public class AuthOperationFilter : IOperationFilter
 
         if (!hasAuthorize) return;
 
-        operation.Security ??= [];
+        operation.Security ??= new List<OpenApiSecurityRequirement>();
 
         operation.Security.Add(new OpenApiSecurityRequirement
         {
-            // OpenAPI.NET v2 uses OpenApiSecuritySchemeReference instead of
-            // the old OpenApiSecurityScheme { Reference = ... } pattern.
-            { new OpenApiSecuritySchemeReference("Bearer", null), [] }
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
         });
     }
 }

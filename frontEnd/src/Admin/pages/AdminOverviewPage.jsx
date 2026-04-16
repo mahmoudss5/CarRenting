@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -6,47 +7,10 @@ import {
   ShieldCheck, ClipboardList,
 } from "lucide-react";
 import AdminLayout from "../AdminLayout";
+import { getAdminStats } from "../../services/adminService";
 
 const stagger = { show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } };
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
-
-const STAT_CARDS = [
-  {
-    label: "Total Users",
-    value: "1,284",
-    trend: "+12%",
-    trendUp: true,
-    icon: Users,
-    gradient: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)",
-    glow: "rgba(59,130,246,0.25)",
-  },
-  {
-    label: "Active Cars",
-    value: "342",
-    trend: "+5.2%",
-    trendUp: true,
-    icon: Car,
-    gradient: "linear-gradient(135deg, #059669 0%, #34d399 100%)",
-    glow: "rgba(52,211,153,0.25)",
-  },
-  {
-    label: "Total Revenue",
-    value: "$28,540",
-    trend: "+18%",
-    trendUp: true,
-    icon: DollarSign,
-    gradient: "linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)",
-    glow: "rgba(167,139,250,0.25)",
-  },
-  {
-    label: "Pending Actions",
-    value: "7",
-    badge: "Needs Review",
-    icon: AlertCircle,
-    gradient: "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",
-    glow: "rgba(245,158,11,0.25)",
-  },
-];
 
 const ACTIVITY = [
   { icon: CheckCircle2, iconBg: "#dcfce7", iconColor: "#16a34a", text: "Porsche Taycan approved by admin",      time: "2 min ago"  },
@@ -95,6 +59,47 @@ function ColorStatCard({ label, value, trend, trendUp, badge, icon: Icon, gradie
 }
 
 export default function AdminOverviewPage() {
+  const [statsData, setStatsData] = useState(null);
+
+  useEffect(() => {
+    getAdminStats().then(setStatsData).catch(console.error);
+  }, []);
+
+  const STAT_CARDS = [
+    {
+      label: "Total Users",
+      value: statsData ? String(statsData.total_users ?? statsData.totalUsers ?? "—") : "…",
+      trend: null,
+      icon: Users,
+      gradient: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)",
+      glow: "rgba(59,130,246,0.25)",
+    },
+    {
+      label: "Active Cars",
+      value: statsData ? String(statsData.active_cars ?? statsData.activeCars ?? "—") : "…",
+      trend: null,
+      icon: Car,
+      gradient: "linear-gradient(135deg, #059669 0%, #34d399 100%)",
+      glow: "rgba(52,211,153,0.25)",
+    },
+    {
+      label: "Total Rentals",
+      value: statsData ? String(statsData.total_rentals ?? statsData.totalRentals ?? "—") : "…",
+      trend: null,
+      icon: ClipboardList,
+      gradient: "linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)",
+      glow: "rgba(167,139,250,0.25)",
+    },
+    {
+      label: "Pending Actions",
+      value: statsData ? String((statsData.pending_owners ?? 0) + (statsData.pending_cars ?? 0) + (statsData.pending_licenses ?? 0)) : "…",
+      badge: "Needs Review",
+      icon: AlertCircle,
+      gradient: "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",
+      glow: "rgba(245,158,11,0.25)",
+    },
+  ];
+
   return (
     <AdminLayout>
       <motion.div variants={stagger} initial="hidden" animate="show">

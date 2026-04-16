@@ -1,11 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { authHeaders } from "../../lib/auth";
+import {
+  getPendingOwners,
+  getPendingCars,
+  approveUser,
+  rejectUser,
+  approveCar,
+  rejectCar,
+  getAdminStats,
+} from "../../services/adminService";
 
 function formatDate(isoString) {
+  if (!isoString) return "—";
   return new Date(isoString).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+    month: "short", day: "numeric", year: "numeric",
   });
 }
 
@@ -31,78 +38,64 @@ function mapCar(c) {
 }
 
 export function useAdminApproval() {
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [totalActiveCars, setTotalActiveCars] = useState(0);
+  const [stats, setStats] = useState({ totalUsers: 0, totalActiveCars: 0, pendingCount: 0 });
   const [verifications, setVerifications] = useState([]);
   const [users, setUsers] = useState([]);
   const [carPosts, setCarPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const headers = authHeaders();
-
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [ownersRes, carsRes] = await Promise.all([
-        fetch("/api/admin/users/pending-owners", { headers }),
-        fetch("/api/admin/cars/pending", { headers }),
+      const [ownersData, carsData, statsData] = await Promise.all([
+        getPendingOwners(),
+        getPendingCars(),
+        getAdminStats().catch(() => null),
       ]);
-
-      if (ownersRes.ok) {
-        const data = await ownersRes.json();
-        setUsers(Array.isArray(data) ? data.map(mapUser) : []);
-      }
-
-      if (carsRes.ok) {
-        const data = await carsRes.json();
-        setCarPosts(Array.isArray(data) ? data.map(mapCar) : []);
+      setUsers(Array.isArray(ownersData) ? ownersData.map(mapUser) : []);
+      setCarPosts(Array.isArray(carsData) ? carsData.map(mapCar) : []);
+      if (statsData) {
+        setStats({
+          totalUsers: statsData.total_users ?? statsData.totalUsers ?? 0,
+          totalActiveCars: statsData.active_cars ?? statsData.activeCars ?? 0,
+          pendingCount:
+            (Array.isArray(ownersData) ? ownersData.length : 0) +
+            (Array.isArray(carsData) ? carsData.length : 0),
+        });
       }
     } catch (err) {
       console.error("Failed to load admin data:", err);
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const approveUser = async (id) => {
-    await fetch(`/api/admin/users/${id}/approve`, { method: "PATCH", headers });
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    setTotalUsers((n) => n + 1);
-  };
-
-  const rejectUser = async (id) => {
-    await fetch(`/api/admin/users/${id}/reject`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ reason: "Application rejected by admin." }),
-    });
+  const handleApproveUser = async (id) => {
+    await approveUser(id);
     setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
-  const approveCar = async (id) => {
-    await fetch(`/api/admin/cars/${id}/approve`, { method: "PATCH", headers });
+  const handleRejectUser = async (id) => {
+    await rejectUser(id, "Application rejected by admin.");
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+  };
+
+  const handleApproveCar = async (id) => {
+    await approveCar(id);
     setCarPosts((prev) => prev.filter((c) => c.id !== id));
-    setTotalActiveCars((n) => n + 1);
   };
 
-  const rejectCar = async (id) => {
-    await fetch(`/api/admin/cars/${id}/reject`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ reason: "Car post rejected by admin." }),
-    });
+  const handleRejectCar = async (id) => {
+    await rejectCar(id, "Car post rejected by admin.");
     setCarPosts((prev) => prev.filter((c) => c.id !== id));
   };
 
   const pendingCount = verifications.length + users.length + carPosts.length;
 
   return {
-    stats: { totalUsers, totalActiveCars, pendingCount },
+    stats: { ...stats, pendingCount },
     verifications,
     users,
     carPosts,
@@ -110,10 +103,10 @@ export function useAdminApproval() {
     handlers: {
       approveVerification: (id) => setVerifications((v) => v.filter((x) => x.id !== id)),
       rejectVerification: (id) => setVerifications((v) => v.filter((x) => x.id !== id)),
-      approveUser,
-      rejectUser,
-      approveCar,
-      rejectCar,
+      approveUser: handleApproveUser,
+      rejectUser: handleRejectUser,
+      approveCar: handleApproveCar,
+      rejectCar: handleRejectCar,
     },
   };
 }
