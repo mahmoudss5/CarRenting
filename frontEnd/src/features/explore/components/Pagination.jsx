@@ -7,7 +7,7 @@ function PageButton({ label, onClick, isActive, disabled, ariaLabel }) {
         aria-label={ariaLabel ?? String(label)}
         aria-current="page"
         onClick={onClick}
-        className="w-10 h-10 rounded-md font-inter font-semibold text-sm text-white flex items-center justify-center"
+        className="flex h-9 w-9 items-center justify-center rounded-xl font-inter font-semibold text-sm text-white shadow-[0_2px_10px_rgba(0,61,155,0.30)] transition-transform duration-150 hover:scale-105"
         style={{ background: GRADIENT_PRIMARY }}
       >
         {label}
@@ -21,10 +21,10 @@ function PageButton({ label, onClick, isActive, disabled, ariaLabel }) {
       onClick={onClick}
       disabled={disabled}
       className={[
-        'w-10 h-10 rounded-md font-inter text-sm font-medium flex items-center justify-center transition-colors duration-200',
+        'flex h-9 w-9 items-center justify-center rounded-xl font-inter text-sm font-medium border transition-all duration-200',
         disabled
-          ? 'text-on-surface/25 cursor-not-allowed'
-          : 'text-on-surface/60 hover:bg-surface-container hover:text-on-surface cursor-pointer',
+          ? 'border-transparent text-slate-300 cursor-not-allowed'
+          : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 cursor-pointer shadow-sm',
       ].join(' ')}
     >
       {label}
@@ -44,7 +44,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
   return (
     <nav
       aria-label="Pagination"
-      className="flex items-center justify-center gap-1 mt-12"
+      className="flex items-center justify-center gap-1.5 mt-14"
     >
       <PageButton
         label="←"

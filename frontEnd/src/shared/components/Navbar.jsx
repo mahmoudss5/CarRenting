@@ -3,7 +3,9 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Car, Menu, X, LogIn, UserCircle, LayoutDashboard, Compass, Settings, ShieldCheck, LogOut } from 'lucide-react';
 import PrimaryButton from './PrimaryButton';
+import NotificationBell from '../../components/ui/NotificationBell';
 import { getUser, clearAuth } from '../../lib/auth';
+import { webSocketService } from '../../services/WebSocketService';
 
 const BASE_LINKS = [
   { to: "/renter-home", label: "Home", icon: Car, end: true },
@@ -24,6 +26,7 @@ export default function Navbar() {
 
   function handleLogout() {
     clearAuth();
+    webSocketService.disconnect();
     navigate("/login");
   }
 
@@ -81,6 +84,7 @@ export default function Navbar() {
                     {user.full_name}
                   </span>
                 </div>
+                <NotificationBell />
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-1.5 font-body text-[0.9rem] font-semibold text-on-surface/70 hover:text-red-500 transition-colors px-3 py-2 rounded-md hover:bg-surface-low border-0 bg-transparent cursor-pointer"

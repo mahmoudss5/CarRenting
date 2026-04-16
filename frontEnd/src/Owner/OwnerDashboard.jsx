@@ -10,7 +10,6 @@ import PrimaryButton from "../components/ui/PrimaryButton";
 import OwnerPageLayout from "./components/OwnerPageLayout";
 import RequestActionButtons from "./components/RequestActionButtons";
 import LicenseVerificationModal from "./components/LicenseVerificationModal";
-import { DASHBOARD_METRICS } from "./data/ownerDashboardData";
 import useOwnerDashboard from "./hooks/useOwnerDashboard";
 
 const fadeUp = {
@@ -202,6 +201,12 @@ export default function OwnerDashboard() {
     rejectLicense,
   } = useOwnerDashboard();
 
+  const liveMetrics = [
+    { id: "active",   label: "Active Listings",   value: String(summary.totalActivePosts ?? 0), trend: "Approved & live" },
+    { id: "pending",  label: "New Rental Requests", value: String(summary.newRequestCount),     trend: "Awaiting your response" },
+    { id: "decisions",label: "Past Decisions",      value: String(summary.pastRequestCount),   trend: "Completed actions" },
+  ];
+
   return (
     <OwnerPageLayout>
       <motion.div variants={stagger} initial="hidden" animate="show">
@@ -211,7 +216,7 @@ export default function OwnerDashboard() {
         />
 
         <motion.section variants={stagger} className="mt-8 grid gap-4 md:grid-cols-3">
-          {DASHBOARD_METRICS.map((metric, i) => (
+          {liveMetrics.map((metric, i) => (
             <MetricCard key={metric.id} metric={metric} icon={METRIC_ICONS[i] || TrendingUp} />
           ))}
         </motion.section>

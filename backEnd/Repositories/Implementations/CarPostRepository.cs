@@ -84,6 +84,12 @@ public class CarPostRepository : ICarPostRepository
             .OrderBy(c => c.CreatedAt)
             .ToListAsync();
 
+    public async Task<IEnumerable<CarPost>> GetAllForAdminAsync() =>
+        await _context.CarPosts
+            .Include(c => c.Owner).ThenInclude(o => o.User)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+
     public async Task<CarPost> CreateAsync(CarPost carPost)
     {
         carPost.CreatedAt = DateTime.UtcNow;

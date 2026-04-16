@@ -43,6 +43,7 @@ public class CarPostService : ICarPostService
 
         return ResponResult<object>.Ok(new { cars = items, total, page });
     }
+    
 
     public async Task<ResponResult<CarDetailDto>> GetByIdAsync(long id)
     {
@@ -51,6 +52,7 @@ public class CarPostService : ICarPostService
 
         return ResponResult<CarDetailDto>.Ok(MapToDetail(car));
     }
+    
 
     public async Task<ResponResult<object>> SearchAsync(CarSearchQueryDto query)
     {
@@ -91,7 +93,6 @@ public class CarPostService : ICarPostService
         };
 
         car = await _carPosts.CreateAsync(car);
-
         return ResponResult<CarPostCreatedDto>.Created(new CarPostCreatedDto
         {
             Message = "Car post created. Awaiting admin approval.",
@@ -197,6 +198,26 @@ public class CarPostService : ICarPostService
         }).ToList();
 
         return ResponResult<object>.Ok(new { pending_cars = items, total = items.Count });
+    }
+
+    public async Task<ResponResult<object>> GetAllCarsAdminAsync()
+    {
+        var cars = await _carPosts.GetAllForAdminAsync();
+        var items = cars.Select(c => new
+        {
+            post_id = c.Id,
+            owner_name = $"{c.Owner.User.FirstName} {c.Owner.User.LastName}".Trim(),
+            title = c.Title,
+            car_type = c.CarType,
+            brand = c.Brand,
+            location = c.Location,
+            rental_price = c.PricePerDay,
+            approval_status = MapApprovalStatus(c.PostStatus),
+            rental_status = c.CarStatus,
+            created_at = c.CreatedAt
+        }).ToList();
+
+        return ResponResult<object>.Ok(new { cars = items, total = items.Count });
     }
 
     public async Task<ResponResult<AdminCarActionResponseDto>> ApproveCarAsync(long id, long adminId)

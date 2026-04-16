@@ -2,7 +2,9 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Car, Plus, UserCircle, LogOut } from "lucide-react";
 import PrimaryButton from "../../components/ui/PrimaryButton";
+import NotificationBell from "../../components/ui/NotificationBell";
 import { getUser, clearAuth } from "../../lib/auth";
+import { webSocketService } from "../../services/WebSocketService";
 
 const OWNER_LINKS = [
   { label: "Home", to: "/owner/home" },
@@ -17,6 +19,7 @@ export default function OwnerTopNav() {
 
   function handleLogout() {
     clearAuth();
+    webSocketService.disconnect();
     navigate("/login");
   }
 
@@ -68,6 +71,7 @@ export default function OwnerTopNav() {
               </PrimaryButton>
             </Link>
           </motion.div>
+          <NotificationBell />
           <button
             onClick={handleLogout}
             className="flex items-center justify-center w-9 h-9 rounded-full text-on-surface/40 hover:text-red-500 hover:bg-red-50 transition-colors border-0 bg-transparent cursor-pointer"

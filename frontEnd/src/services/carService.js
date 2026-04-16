@@ -7,7 +7,7 @@ import apiClient from "../lib/apiClient";
  * Returns paginated active car listings (public).
  */
 export async function getCars({ page = 1, pageSize = 20 } = {}) {
-  const { data } = await apiClient.get("/api/cars", { params: { page, page_size: pageSize } });
+  const { data } = await apiClient.get("/api/cars/getAll", { params: { page, pageSize } });
   return data;
   // [{ post_id, title, car_type, brand, model, year, transmission,
   //    location, rental_price, rental_status, owner_name, average_rating }]

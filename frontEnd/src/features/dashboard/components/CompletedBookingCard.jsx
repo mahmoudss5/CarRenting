@@ -2,6 +2,7 @@ import { useState } from 'react';
 import StatusChip from '../../../shared/components/StatusChip';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import FeedbackModal from './FeedbackModal';
+import { createReview } from '../../../services/reviewService';
 
 function StarRating({ rating }) {
   return (
@@ -25,9 +26,6 @@ function RatedFooter({ rating }) {
         <StarRating rating={rating} />
         <span className="text-primary text-sm font-bold">✓</span>
       </div>
-      <button className="mt-3 font-inter text-[0.875rem] font-semibold text-primary hover:underline transition-colors duration-200">
-        Download Receipt
-      </button>
     </div>
   );
 }
@@ -48,15 +46,32 @@ function UnratedFooter({ onRate }) {
 /**
  * Completed booking card — context-aware footer (rated vs unrated).
  * Unrated cards open a FeedbackModal on "Rate this Experience".
+ * On submit, the review is persisted to the backend via POST /api/reviews.
  */
 export default function CompletedBookingCard({ booking }) {
   const [modalOpen, setModalOpen]   = useState(false);
   const [localRating, setLocalRating] = useState(booking.hasRating ? booking.rating : null);
+  const [submitError, setSubmitError] = useState('');
 
-  function handleFeedbackSubmit({ rating }) {
-    // In a real app you'd call an API here.
-    setLocalRating(rating);
-    setModalOpen(false);
+  async function handleFeedbackSubmit({ rating, comment }) {
+    setSubmitError('');
+    try {
+      await createReview({
+        requestId: booking.requestId,   // request_id from rental
+        postId: booking.car?.postId,    // post_id of the car
+        rating,
+        feedback: comment || undefined,
+      });
+      setLocalRating(rating);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        'Failed to submit review. Please try again.';
+      setSubmitError(msg);
+    } finally {
+      setModalOpen(false);
+    }
   }
 
   const isRated = localRating !== null;
@@ -87,6 +102,10 @@ export default function CompletedBookingCard({ booking }) {
           </h3>
           <p className="font-inter text-body-md text-on-surface/45 mt-1">{booking.dates}</p>
 
+          {submitError && (
+            <p className="mt-2 font-inter text-[0.8rem] text-red-600">{submitError}</p>
+          )}
+
           {isRated ? (
             <RatedFooter rating={localRating} />
           ) : (
@@ -95,7 +114,6 @@ export default function CompletedBookingCard({ booking }) {
         </div>
       </div>
 
-      {/* Feedback modal — rendered in a portal-like position at root via fixed positioning */}
       {modalOpen && (
         <FeedbackModal
           booking={booking}

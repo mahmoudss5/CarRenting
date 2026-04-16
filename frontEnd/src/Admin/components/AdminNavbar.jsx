@@ -1,6 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Car, Bell, LogOut } from "lucide-react";
+import { Car, LogOut } from "lucide-react";
 import { getUser, clearAuth } from "../../lib/auth";
+import NotificationBell from "../../components/ui/NotificationBell";
+import { webSocketService } from "../../services/WebSocketService";
 
 function NavIconBtn({ children, danger = false, onClick }) {
   return (
@@ -24,6 +26,7 @@ export default function AdminNavbar() {
 
   function handleLogout() {
     clearAuth();
+    webSocketService.disconnect();
     navigate("/login");
   }
 
@@ -49,7 +52,7 @@ export default function AdminNavbar() {
             </span>
           )}
           <div className="flex items-center gap-1">
-            <NavIconBtn><Bell size={19} strokeWidth={1.8} /></NavIconBtn>
+            <NotificationBell />
             <NavIconBtn danger onClick={handleLogout}><LogOut size={19} strokeWidth={1.8} /></NavIconBtn>
           </div>
         </div>

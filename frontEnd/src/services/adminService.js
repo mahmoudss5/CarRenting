@@ -78,8 +78,19 @@ export async function promoteToAdmin(id) {
  */
 export async function getPendingCars() {
   const { data } = await apiClient.get("/api/admin/cars/pending");
-  return data;
-  // [{ post_id, owner_name, title, car_type, brand, location, rental_price, created_at }]
+  // Backend returns { pending_cars: [...], total }
+  return Array.isArray(data) ? data : (data?.pending_cars ?? []);
+}
+
+/**
+ * GET /api/admin/cars  [Requires Auth: Admin]
+ * Get ALL car posts (any approval_status) for the admin overview.
+ * Returns: { cars: [...], total }
+ */
+export async function getAdminAllCars() {
+  const { data } = await apiClient.get("/api/admin/cars");
+  // Unwrap the cars array from the wrapper object
+  return Array.isArray(data) ? data : (data?.cars ?? []);
 }
 
 /**

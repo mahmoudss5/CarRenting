@@ -12,6 +12,7 @@ public interface ICarPostRepository
     Task<int> CountSearchAsync(string? type, string? brand, string? location, decimal? minPrice, decimal? maxPrice);
     Task<IEnumerable<CarPost>> GetByOwnerIdAsync(long ownerId);
     Task<IEnumerable<CarPost>> GetPendingAsync();
+    Task<IEnumerable<CarPost>> GetAllForAdminAsync();
     Task<CarPost> CreateAsync(CarPost carPost);
     Task UpdateAsync(CarPost carPost);
     Task DeleteAsync(CarPost carPost);

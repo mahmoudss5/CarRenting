@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
 /**
- * Editorial input field — filled style, no underline.
- * Active state transitions background and adds a ghost primary border (20% opacity).
+ * Premium editorial input — bordered white style with smooth focus states.
+ * Active state transitions border to blue with a soft ring.
  */
 export default function EditorialInput({
   id,
@@ -18,11 +18,11 @@ export default function EditorialInput({
   const [focused, setFocused] = useState(false);
 
   return (
-    <div className={`flex flex-col gap-1 ${className}`}>
+    <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
         <label
           htmlFor={id}
-          className="text-label-sm font-bold tracking-[0.05em] uppercase text-on-surface/50"
+          className="font-inter text-[0.7rem] font-semibold uppercase tracking-widest text-slate-500"
         >
           {label}
         </label>
@@ -30,7 +30,7 @@ export default function EditorialInput({
 
       <div className="relative">
         {icon && (
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface/40 pointer-events-none">
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
             {icon}
           </span>
         )}
@@ -45,12 +45,12 @@ export default function EditorialInput({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           className={[
-            'w-full rounded-md py-3 text-body-md font-inter text-on-surface outline-none',
-            'transition-all duration-200 placeholder:text-on-surface/35',
+            'w-full rounded-xl border py-3 font-inter text-[0.875rem] text-slate-800 outline-none transition-all duration-200',
+            'placeholder:text-slate-400',
             icon ? 'pl-10 pr-4' : 'px-4',
             focused
-              ? 'bg-[#eef0ff] ring-1 ring-primary/20'
-              : 'bg-surface-container-highest',
+              ? 'border-blue-500 bg-white ring-3 ring-blue-500/10 shadow-md'
+              : 'border-slate-200 bg-white hover:border-blue-300 hover:shadow-sm',
           ].join(' ')}
         />
       </div>
