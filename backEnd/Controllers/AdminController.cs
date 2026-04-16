@@ -56,6 +56,10 @@ public class AdminController : ApiController
         FromResult(await _userService.DeleteUserAsync(id));
 
     // ─── Car Posts ───────────────────────────────────────────
+    [HttpGet("cars")]
+    public async Task<IActionResult> GetAllCars() =>
+        FromResult(await _carService.GetAllCarsAdminAsync());
+
     [HttpGet("cars/pending")]
     public async Task<IActionResult> GetPendingCars() =>
         FromResult(await _carService.GetPendingCarsAsync());

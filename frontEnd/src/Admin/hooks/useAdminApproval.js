@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   getPendingOwners,
   getPendingCars,
-  getAdminAllCars,
   approveUser,
   rejectUser,
   approveCar,
@@ -78,8 +77,7 @@ export function useAdminApproval() {
   const [stats, setStats] = useState({ totalUsers: 0, totalActiveCars: 0, pendingCount: 0 });
   const [verifications, setVerifications] = useState([]);
   const [users, setUsers] = useState([]);
-  const [carPosts, setCarPosts] = useState([]);       // pending cars
-  const [approvedCars, setApprovedCars] = useState([]); // approved cars
+  const [carPosts, setCarPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -87,24 +85,20 @@ export function useAdminApproval() {
     setIsLoading(true);
     setError(null);
     try {
-      const [ownersData, pendingCarsData, licensesData, statsData, allCarsData] =
+      const [ownersData, pendingCarsData, licensesData, statsData] =
         await Promise.all([
           getPendingOwners().catch(() => []),
           getPendingCars().catch(() => []),
           getAllLicenses().catch(() => []),
           getAdminStats().catch(() => null),
-          getAdminAllCars().catch(() => []),
         ]);
 
       const mappedPending = Array.isArray(pendingCarsData)
         ? pendingCarsData.map(mapCar)
         : [];
-      const mappedAll = Array.isArray(allCarsData) ? allCarsData.map(mapCar) : [];
 
       setUsers(Array.isArray(ownersData) ? ownersData.map(mapUser) : []);
       setCarPosts(mappedPending);
-      // Approved = all cars that are NOT pending (fallback: filter from allCars)
-      setApprovedCars(mappedAll.filter((c) => c.status === "approved"));
       setVerifications(Array.isArray(licensesData) ? licensesData.map(mapLicense) : []);
 
       const pendingCount =
@@ -114,10 +108,11 @@ export function useAdminApproval() {
           ? licensesData.filter((l) => (l.verification_status ?? "").toLowerCase() === "pending").length
           : 0);
 
+      // Backend returns a nested object: { users: { total, pending_approvals }, cars: { active }, ... }
       if (statsData) {
         setStats({
-          totalUsers: statsData.total_users ?? statsData.totalUsers ?? 0,
-          totalActiveCars: statsData.active_cars ?? statsData.activeCars ?? 0,
+          totalUsers: statsData.users?.total ?? 0,
+          totalActiveCars: statsData.cars?.active ?? 0,
           pendingCount,
         });
       } else {
@@ -156,10 +151,7 @@ export function useAdminApproval() {
   const handleApproveCar = async (id) => {
     try {
       await approveCar(id);
-      // Move from pending → approved locally for instant feedback
-      const approved = carPosts.find((c) => c.id === id);
       setCarPosts((prev) => prev.filter((c) => c.id !== id));
-      if (approved) setApprovedCars((prev) => [...prev, { ...approved, status: "approved" }]);
     } catch (err) {
       console.error("Approve car failed:", err);
     }
@@ -201,8 +193,7 @@ export function useAdminApproval() {
     stats: { ...stats, pendingCount },
     verifications: verifications.filter((v) => v.status === "pending"),
     users,
-    carPosts,       // pending cars only
-    approvedCars,   // approved cars
+    carPosts,
     isLoading,
     error,
     refetch: fetchAll,

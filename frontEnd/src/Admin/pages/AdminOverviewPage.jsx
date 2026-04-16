@@ -21,11 +21,7 @@ const ACTIVITY = [
   { icon: ShieldCheck,  iconBg: "#cffafe", iconColor: "#0891b2", text: "Aaron Wright's license verified",      time: "3 hr ago"   },
 ];
 
-const QUICK_ACTIONS = [
-  { label: "Review Car Posts",    sub: "3 pending",        to: "/admin/cars",          icon: Car,          gradient: "linear-gradient(135deg,#1d4ed8,#3b82f6)" },
-  { label: "Verify Identities",   sub: "2 pending",        to: "/admin/verifications", icon: ShieldCheck,  gradient: "linear-gradient(135deg,#7c3aed,#a78bfa)" },
-  { label: "Active Rentals",      sub: "5 rentals",        to: "/admin/rentals",       icon: ClipboardList, gradient: "linear-gradient(135deg,#059669,#34d399)" },
-];
+// Quick action sub-labels are populated from the same stats fetch
 
 function ColorStatCard({ label, value, trend, trendUp, badge, icon: Icon, gradient, glow }) {
   return (
@@ -65,10 +61,41 @@ export default function AdminOverviewPage() {
     getAdminStats().then(setStatsData).catch(console.error);
   }, []);
 
+  const quickActions = [
+    {
+      label: "Review Car Posts",
+      sub: statsData ? `${statsData.cars?.pending_approval ?? 0} pending` : "…",
+      to: "/admin/cars",
+      icon: Car,
+      gradient: "linear-gradient(135deg,#1d4ed8,#3b82f6)",
+    },
+    {
+      label: "Verify Identities",
+      sub: statsData ? `${statsData.licenses?.pending_verification ?? 0} pending` : "…",
+      to: "/admin/verifications",
+      icon: ShieldCheck,
+      gradient: "linear-gradient(135deg,#7c3aed,#a78bfa)",
+    },
+    {
+      label: "Active Rentals",
+      sub: statsData ? `${statsData.rentals?.active ?? 0} active` : "…",
+      to: "/admin/rentals",
+      icon: ClipboardList,
+      gradient: "linear-gradient(135deg,#059669,#34d399)",
+    },
+  ];
+
+  // Backend returns a nested object — e.g. { users: { total, pending_approvals }, cars: { active, pending_approval }, ... }
+  const pendingActions = statsData
+    ? (statsData.users?.pending_approvals ?? 0) +
+      (statsData.cars?.pending_approval ?? 0) +
+      (statsData.licenses?.pending_verification ?? 0)
+    : null;
+
   const STAT_CARDS = [
     {
       label: "Total Users",
-      value: statsData ? String(statsData.total_users ?? statsData.totalUsers ?? "—") : "…",
+      value: statsData ? String(statsData.users?.total ?? "—") : "…",
       trend: null,
       icon: Users,
       gradient: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)",
@@ -76,7 +103,7 @@ export default function AdminOverviewPage() {
     },
     {
       label: "Active Cars",
-      value: statsData ? String(statsData.active_cars ?? statsData.activeCars ?? "—") : "…",
+      value: statsData ? String(statsData.cars?.active ?? "—") : "…",
       trend: null,
       icon: Car,
       gradient: "linear-gradient(135deg, #059669 0%, #34d399 100%)",
@@ -84,7 +111,7 @@ export default function AdminOverviewPage() {
     },
     {
       label: "Total Rentals",
-      value: statsData ? String(statsData.total_rentals ?? statsData.totalRentals ?? "—") : "…",
+      value: statsData ? String(statsData.rentals?.total ?? "—") : "…",
       trend: null,
       icon: ClipboardList,
       gradient: "linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)",
@@ -92,7 +119,7 @@ export default function AdminOverviewPage() {
     },
     {
       label: "Pending Actions",
-      value: statsData ? String((statsData.pending_owners ?? 0) + (statsData.pending_cars ?? 0) + (statsData.pending_licenses ?? 0)) : "…",
+      value: statsData ? String(pendingActions) : "…",
       badge: "Needs Review",
       icon: AlertCircle,
       gradient: "linear-gradient(135deg, #d97706 0%, #f59e0b 100%)",
@@ -159,7 +186,7 @@ export default function AdminOverviewPage() {
           {/* Quick Actions */}
           <motion.div variants={fadeUp} className="flex flex-col gap-4">
             <h2 className="font-display font-bold text-lg text-on-surface">Quick Actions</h2>
-            {QUICK_ACTIONS.map(({ label, sub, to, icon: Icon, gradient }) => (
+            {quickActions.map(({ label, sub, to, icon: Icon, gradient }) => (
               <Link
                 key={to}
                 to={to}

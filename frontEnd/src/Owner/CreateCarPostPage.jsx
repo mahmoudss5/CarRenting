@@ -12,25 +12,21 @@ import {
   Settings2,
   MapPin,
   DollarSign,
-  CalendarRange,
-  Activity,
   AlertCircle,
 } from "lucide-react";
 import PrimaryButton from "../components/ui/PrimaryButton";
 import OwnerPageLayout from "./components/OwnerPageLayout";
 import useCreateCarPostForm from "./hooks/useCreateCarPostForm";
+import { getUser } from "../lib/auth";
 
-/* ─── Animation presets ─────────────────────────────────────── */
 const fadeUp = { hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } };
 const stagger = {
   show: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } },
 };
 
-/* ─── Shared field input class ───────────────────────────────── */
 const input =
   "w-full rounded-xl bg-white border border-slate-200 px-4 py-3 font-inter text-[0.875rem] text-slate-800 outline-none placeholder:text-slate-400 transition-all duration-200 hover:border-blue-300 hover:shadow-sm focus:border-blue-500 focus:ring-3 focus:ring-blue-500/10 focus:shadow-md";
 
-/* ─── Reusable Label + field wrapper ────────────────────────── */
 function Field({ label, icon: Icon, children, span2 = false }) {
   return (
     <div className={span2 ? "md:col-span-2" : ""}>
@@ -45,7 +41,6 @@ function Field({ label, icon: Icon, children, span2 = false }) {
   );
 }
 
-/* ─── Section card wrapper ───────────────────────────────────── */
 function SectionCard({ icon: Icon, title, subtitle, children, delay = 0 }) {
   return (
     <motion.div
@@ -53,7 +48,6 @@ function SectionCard({ icon: Icon, title, subtitle, children, delay = 0 }) {
       transition={{ delay }}
       className="rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_16px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_32px_rgba(15,23,42,0.10)] transition-shadow duration-300"
     >
-      {/* Card header */}
       <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-5">
         <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 ring-1 ring-blue-100">
           <Icon size={16} className="text-blue-600" strokeWidth={2} />
@@ -65,22 +59,22 @@ function SectionCard({ icon: Icon, title, subtitle, children, delay = 0 }) {
           )}
         </div>
       </div>
-      {/* Card body */}
       <div className="px-6 py-6">{children}</div>
     </motion.div>
   );
 }
 
-/* ─── Page ───────────────────────────────────────────────────── */
 export default function CreateCarPostPage() {
   const { formData, isSubmitted, isSubmitting, serverError, updateField, handleSubmit } =
     useCreateCarPostForm();
+
+  const user = getUser();
 
   return (
     <OwnerPageLayout>
       <motion.div variants={stagger} initial="hidden" animate="show" className="max-w-4xl mx-auto">
 
-        {/* ── Hero header ── */}
+        {/* Hero header */}
         <motion.div variants={fadeUp} className="mb-8">
           <div className="flex items-center gap-2 mb-3">
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600">
@@ -100,18 +94,21 @@ export default function CreateCarPostPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-          {/* ── Section 1: Owner Info ── */}
-          <SectionCard icon={User} title="Owner Information" subtitle="Your identity as the listing owner">
+          {/* Section 1: Listing Info */}
+          <SectionCard icon={User} title="Listing Info" subtitle="Identify this listing">
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Owner Name" icon={User}>
-                <input
-                  value={formData.ownerName}
-                  onChange={updateField("ownerName")}
-                  placeholder="e.g. John Doe"
-                  className={input}
-                  required
-                />
-              </Field>
+
+              {/* Owner display — read-only, derived from auth token */}
+              <div className="md:col-span-2 flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3">
+                <User size={14} className="text-blue-500 shrink-0" strokeWidth={2} />
+                <span className="font-inter text-[0.75rem] font-semibold uppercase tracking-widest text-slate-400 mr-2">
+                  Owner
+                </span>
+                <span className="font-inter text-[0.875rem] font-medium text-slate-700">
+                  {user?.full_name ?? "—"}
+                </span>
+              </div>
+
               <Field label="Listing Title" icon={FileText}>
                 <input
                   value={formData.title}
@@ -121,22 +118,24 @@ export default function CreateCarPostPage() {
                   required
                 />
               </Field>
+
               <Field label="Description" icon={FileText} span2>
                 <textarea
                   value={formData.description}
                   onChange={updateField("description")}
-                  placeholder="Describe your car — features, condition, extras …"
+                  placeholder="Describe your car — features, condition, extras…"
                   className={`${input} min-h-[100px] resize-y leading-relaxed`}
                   rows={4}
-                  required
                 />
               </Field>
+
             </div>
           </SectionCard>
 
-          {/* ── Section 2: Car Details ── */}
+          {/* Section 2: Vehicle Details */}
           <SectionCard icon={Car} title="Vehicle Details" subtitle="Technical specifications of your car">
             <div className="grid gap-4 md:grid-cols-2">
+
               <Field label="Car Type" icon={Tag}>
                 <input
                   value={formData.carType}
@@ -146,6 +145,7 @@ export default function CreateCarPostPage() {
                   required
                 />
               </Field>
+
               <Field label="Brand" icon={Tag}>
                 <input
                   value={formData.brand}
@@ -155,6 +155,7 @@ export default function CreateCarPostPage() {
                   required
                 />
               </Field>
+
               <Field label="Model" icon={Cpu}>
                 <input
                   value={formData.model}
@@ -164,8 +165,12 @@ export default function CreateCarPostPage() {
                   required
                 />
               </Field>
+
               <Field label="Year" icon={Cpu}>
                 <input
+                  type="number"
+                  min="1900"
+                  max={new Date().getFullYear() + 1}
                   value={formData.year}
                   onChange={updateField("year")}
                   placeholder="e.g. 2022"
@@ -173,6 +178,7 @@ export default function CreateCarPostPage() {
                   required
                 />
               </Field>
+
               <Field label="Transmission" icon={Settings2}>
                 <div className="relative">
                   <select
@@ -184,9 +190,12 @@ export default function CreateCarPostPage() {
                     <option value="Automatic">Automatic</option>
                     <option value="Manual">Manual</option>
                   </select>
-                  <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                  <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
               </Field>
+
               <Field label="Location" icon={MapPin}>
                 <input
                   value={formData.location}
@@ -196,10 +205,11 @@ export default function CreateCarPostPage() {
                   required
                 />
               </Field>
+
             </div>
           </SectionCard>
 
-          {/* ── Section 3: Pricing ── */}
+          {/* Section 3: Pricing */}
           <SectionCard icon={DollarSign} title="Pricing" subtitle="Set your daily rental rate">
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Rental Price (Per Day)" icon={DollarSign}>
@@ -210,6 +220,7 @@ export default function CreateCarPostPage() {
                   <input
                     type="number"
                     min="1"
+                    step="0.01"
                     value={formData.rentalPrice}
                     onChange={updateField("rentalPrice")}
                     placeholder="0"
@@ -218,52 +229,11 @@ export default function CreateCarPostPage() {
                   />
                 </div>
               </Field>
-              <Field label="Owner Rental Status" icon={Activity}>
-                <div className="relative">
-                  <select
-                    value={formData.ownerRentalStatus}
-                    onChange={updateField("ownerRentalStatus")}
-                    className={`${input} appearance-none cursor-pointer pr-9`}
-                  >
-                    <option value="Pending">🟡 Pending</option>
-                    <option value="Active">🟢 Active</option>
-                    <option value="Rented">🔵 Rented</option>
-                  </select>
-                  <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </Field>
             </div>
           </SectionCard>
 
-          {/* ── Section 4: Availability ── */}
-          <SectionCard icon={CalendarRange} title="Availability Window" subtitle="Define when your car is available for rental">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field label="Start Date" icon={CalendarRange}>
-                <input
-                  type="date"
-                  value={formData.availabilityStart}
-                  onChange={updateField("availabilityStart")}
-                  className={`${input} cursor-pointer`}
-                  required
-                />
-              </Field>
-              <Field label="End Date" icon={CalendarRange}>
-                <input
-                  type="date"
-                  value={formData.availabilityEnd}
-                  onChange={updateField("availabilityEnd")}
-                  className={`${input} cursor-pointer`}
-                  required
-                />
-              </Field>
-            </div>
-          </SectionCard>
-
-          {/* ── Actions ── */}
-          <motion.div
-            variants={fadeUp}
-            className="flex flex-wrap items-center gap-3 pb-4"
-          >
+          {/* Actions */}
+          <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-3 pb-4">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
               <PrimaryButton
                 type="submit"
@@ -298,7 +268,7 @@ export default function CreateCarPostPage() {
                   Listing submitted successfully!
                 </p>
                 <p className="font-inter text-[0.8rem] text-emerald-700 leading-relaxed mt-0.5">
-                  Your car post has been created. Redirecting you to the dashboard…
+                  Your car post has been created and is pending admin review. Redirecting…
                 </p>
               </div>
             </motion.div>
@@ -315,6 +285,7 @@ export default function CreateCarPostPage() {
               <p className="font-inter text-[0.875rem] text-red-700">{serverError}</p>
             </motion.div>
           )}
+
         </form>
       </motion.div>
     </OwnerPageLayout>
