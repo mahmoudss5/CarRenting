@@ -107,6 +107,7 @@ public class RentalService : IRentalService
         var items = requests.Select(r => new RentalListItemDto
         {
             RequestId = r.Id,
+            CarPostId = r.CarPostId,
             CarTitle = r.CarPost.Title,
             StartDate = r.StartDate,
             EndDate = r.EndDate,

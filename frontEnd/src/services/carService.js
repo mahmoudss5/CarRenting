@@ -3,19 +3,19 @@ import apiClient from "../lib/apiClient";
 // ─── Listings ────────────────────────────────────────────────────────────────
 
 /**
- * GET /api/cars?page=1&pageSize=20
- * Returns paginated active car listings (public).
+ * GET /api/cars/getAll?page=1&pageSize=20  (public)
+ * Returns paginated active car listings.
  */
 export async function getCars({ page = 1, pageSize = 20 } = {}) {
   const { data } = await apiClient.get("/api/cars/getAll", { params: { page, pageSize } });
   return data;
-  // [{ post_id, title, car_type, brand, model, year, transmission,
-  //    location, rental_price, rental_status, owner_name, average_rating }]
+  // { cars: [{ post_id, title, car_type, brand, model, year, transmission,
+  //    location, rental_price, rental_status, owner_name, average_rating }], total, page }
 }
 
 /**
- * GET /api/cars/search?type=&brand=&location=&min_price=&max_price=&page=1&page_size=20
- * Search/filter cars (public).
+ * GET /api/cars/search  (public)
+ * Search/filter active listings by type, brand, location, price range.
  */
 export async function searchCars({ type, brand, location, minPrice, maxPrice, page = 1, pageSize = 20 } = {}) {
   const { data } = await apiClient.get("/api/cars/search", {
@@ -30,11 +30,12 @@ export async function searchCars({ type, brand, location, minPrice, maxPrice, pa
     },
   });
   return data;
+  // { results: [...], total }
 }
 
 /**
- * GET /api/cars/:id
- * Get single car details (public).
+ * GET /api/cars/:id  (public)
+ * Get single car details including availability and reviews.
  */
 export async function getCarById(id) {
   const { data } = await apiClient.get(`/api/cars/${id}`);
@@ -66,16 +67,13 @@ export async function createCar({ title, description, carType, brand, model, yea
 
 /**
  * PUT /api/cars/:id  [Requires Auth: CarOwner]
- * Body: same fields as create (all optional for update)
+ * Body matches UpdateCarPostRequestDto — only editable fields:
+ *   title?, description?, rental_price?, location?, transmission?
  */
-export async function updateCar(id, { title, description, carType, brand, model, year, transmission, location, rentalPrice }) {
+export async function updateCar(id, { title, description, transmission, location, rentalPrice }) {
   const { data } = await apiClient.put(`/api/cars/${id}`, {
     title,
     description,
-    car_type: carType,
-    brand,
-    model,
-    year,
     transmission,
     location,
     rental_price: rentalPrice,
@@ -96,12 +94,10 @@ export async function deleteCar(id) {
 
 /**
  * GET /api/cars/:id/availability  (public)
- * Returns available dates for a car.
  */
 export async function getCarAvailability(id) {
   const { data } = await apiClient.get(`/api/cars/${id}/availability`);
   return data;
-  // { post_id, availability: [{ date: "YYYY-MM-DD", is_available: bool }] }
 }
 
 /**
@@ -127,7 +123,6 @@ export async function updateCarAvailability(id, dates) {
 /**
  * POST /api/cars/:id/images?isPrimary=false  [Requires Auth: CarOwner]
  * Sends multipart/form-data with the image file.
- * @param {File} imageFile - The image file to upload
  */
 export async function addCarImage(id, imageFile, isPrimary = false) {
   const formData = new FormData();

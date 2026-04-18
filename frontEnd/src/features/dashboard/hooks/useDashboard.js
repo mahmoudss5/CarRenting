@@ -12,6 +12,7 @@ function mapRental(r) {
     status,
     car: {
       name: r.car_title,
+      postId: r.car_post_id ?? null,   // needed for review submission
       image: null,
       pricePerDay: null,
     },

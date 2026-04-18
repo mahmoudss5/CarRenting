@@ -118,17 +118,16 @@ export const EXPLORE_CARS = [
 ];
 
 export const FILTER_CATEGORIES = [
-  { id: 'priceRange', label: 'Price Range' },
-  { id: 'carType',    label: 'Car Type' },
-  { id: 'brand',      label: 'Brand' },
-  { id: 'fuelType',   label: 'Fuel Type' },
-  { id: 'transmission', label: 'Transmission' },
+  { id: 'priceRange',    label: 'Price Range'   },
+  { id: 'location',      label: 'Location'       },
+  { id: 'carType',       label: 'Car Type'       },
+  { id: 'brand',         label: 'Brand'          },
+  { id: 'transmission',  label: 'Transmission'   },
 ];
 
 export const FILTER_OPTIONS = {
-  carType:      ['Sedan', 'SUV', 'Sports', 'Coupe', 'Truck'],
-  brand:        ['BMW', 'Tesla', 'Mercedes', 'Audi', 'Porsche', 'Ferrari', 'Lucid', 'Lamborghini', 'Rivian'],
-  fuelType:     ['Electric', 'Petrol', 'Diesel'],
+  carType:      ['Sedan', 'SUV', 'Sports', 'Coupe', 'Truck', 'Hatchback', 'Convertible'],
+  brand:        ['BMW', 'Tesla', 'Mercedes', 'Audi', 'Porsche', 'Ferrari', 'Toyota', 'Honda', 'Lucid', 'Lamborghini', 'Rivian'],
   transmission: ['Automatic', 'Manual'],
 };
 

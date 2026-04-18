@@ -1,27 +1,22 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { getMyCars } from "../../services/ownerService";
-import { getCarById } from "../../services/carService";
+import { getCarById, deleteCar } from "../../services/carService";
 
-/** Merge the summary row from /api/owner/cars with the full detail from /api/cars/:id */
 function mergeCarData(summary, detail) {
   return {
-    // identity
     id: String(summary.post_id),
-    // from summary (always present)
     title: summary.title ?? detail?.title ?? "Untitled",
     approvalStatus: (summary.approval_status ?? "pending").toLowerCase(),
     rentalStatus: (summary.rental_status ?? "available").toLowerCase(),
     rentalPrice: Number(summary.rental_price ?? detail?.rental_price ?? 0),
     createdAt: summary.created_at,
-    // UI display status label
     ownerRentalStatus: (() => {
       const approval = (summary.approval_status ?? "").toLowerCase();
-      const rental   = (summary.rental_status ?? "").toLowerCase();
+      const rental = (summary.rental_status ?? "").toLowerCase();
       if (approval === "pending") return "Pending";
-      if (rental === "rented")   return "Rented";
+      if (rental === "rented") return "Rented";
       return "Active";
     })(),
-    // from full detail (may be null if fetch fails)
     description: detail?.description ?? "",
     carType: detail?.car_type ?? "—",
     brand: detail?.brand ?? "—",
@@ -30,11 +25,12 @@ function mergeCarData(summary, detail) {
     transmission: detail?.transmission ?? "—",
     location: detail?.location ?? "—",
     ownerName: detail?.owner_name ?? "—",
-    fuelType: "—",   // not returned by backend — placeholder
-    seats: "—",      // not returned by backend — placeholder
-    mileage: "—",    // not returned by backend — placeholder
-    availability: "—",
-    minRentalDays: 1,
+    availability: Array.isArray(detail?.availability) ? detail.availability : [],
+    image: (() => {
+      const imgs = detail?.images ?? [];
+      const primary = imgs.find((i) => i.is_primary);
+      return (primary ?? imgs[0])?.image_url ?? null;
+    })(),
   };
 }
 
@@ -42,16 +38,17 @@ export default function useOwnerHome() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
-  useEffect(() => {
+  const fetchPosts = useCallback(() => {
     setIsLoading(true);
+    setError(null);
     getMyCars()
       .then(async (summaries) => {
         if (!Array.isArray(summaries)) {
           setPosts([]);
           return;
         }
-        // Fetch full details in parallel (best-effort; failures are swallowed)
         const detailed = await Promise.all(
           summaries.map((s) =>
             getCarById(s.post_id)
@@ -68,12 +65,32 @@ export default function useOwnerHome() {
       .finally(() => setIsLoading(false));
   }, []);
 
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const deletePost = useCallback(async (id) => {
+    setDeletingId(id);
+    try {
+      await deleteCar(id);
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        "Failed to delete this listing.";
+      throw new Error(msg);
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
+
   const stats = useMemo(() => {
-    const active  = posts.filter((p) => p.ownerRentalStatus === "Active").length;
+    const active = posts.filter((p) => p.ownerRentalStatus === "Active").length;
     const pending = posts.filter((p) => p.ownerRentalStatus === "Pending").length;
-    const rented  = posts.filter((p) => p.ownerRentalStatus === "Rented").length;
+    const rented = posts.filter((p) => p.ownerRentalStatus === "Rented").length;
     return { totalPosts: posts.length, active, pending, rented };
   }, [posts]);
 
-  return { posts, stats, isLoading, error };
+  return { posts, stats, isLoading, error, deletingId, deletePost, refetch: fetchPosts };
 }

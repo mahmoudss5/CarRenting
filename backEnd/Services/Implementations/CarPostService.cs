@@ -364,7 +364,9 @@ public class CarPostService : ICarPostService
         RentalPrice = c.PricePerDay,
         RentalStatus = c.CarStatus,
         OwnerName = $"{c.Owner.User.FirstName} {c.Owner.User.LastName}".Trim(),
-        AverageRating = Math.Round(rating, 1)
+        AverageRating = Math.Round(rating, 1),
+        PrimaryImageUrl = c.CarImages.FirstOrDefault(i => i.IsPrimary)?.ImageUrl
+                          ?? c.CarImages.OrderBy(i => i.SortOrder).FirstOrDefault()?.ImageUrl
     };
 
     private static CarDetailDto MapToDetail(CarPost c) => new()
@@ -382,6 +384,15 @@ public class CarPostService : ICarPostService
         RentalPrice = c.PricePerDay,
         RentalStatus = c.CarStatus,
         ApprovalStatus = c.PostStatus switch { "PendingApproval" => "Pending", "Active" => "Approved", _ => c.PostStatus },
+        Images = c.CarImages
+            .OrderBy(i => i.SortOrder)
+            .Select(i => new CarImageDto
+            {
+                ImageId   = i.Id,
+                ImageUrl  = i.ImageUrl,
+                IsPrimary = i.IsPrimary,
+                SortOrder = i.SortOrder
+            }).ToList(),
         Availability = c.AvailabilityCalendars
             .Where(a => a.IsAvailable)
             .Select(a => a.CalendarDate)

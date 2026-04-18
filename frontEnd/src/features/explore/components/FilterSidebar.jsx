@@ -73,7 +73,28 @@ function PriceRangePanel({ priceRange, setPriceRange }) {
   );
 }
 
-/* ─── Multi-check panel ──────────────────────────────────────── */
+/* ─── Location panel ─────────────────────────────────────────── */
+function LocationPanel({ location, setLocation }) {
+  const inputClass =
+    'w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 font-inter text-[0.8125rem] text-slate-800 outline-none transition-all duration-200 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10';
+
+  return (
+    <div className="px-1 pt-2 pb-1">
+      <input
+        type="text"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        placeholder="e.g. Algiers, Oran…"
+        className={inputClass}
+      />
+      <p className="mt-1 font-inter text-[0.68rem] text-slate-400">
+        Shows cars whose location contains this text
+      </p>
+    </div>
+  );
+}
+
+
 function MultiCheckPanel({ categoryId, selected, onChange }) {
   const options = FILTER_OPTIONS[categoryId] ?? [];
   return (
@@ -100,6 +121,7 @@ export default function FilterSidebar({
   onCategoryClick,
   onToggleMulti,
   onPriceRange,
+  onLocation,
   onApply,
   onReset,
 }) {
@@ -126,22 +148,27 @@ export default function FilterSidebar({
               onClick={onCategoryClick}
             />
             {/* Expanded panel for the active category */}
-            {activeCategory === cat.id && (
-              <div className="mt-1 mb-2 ml-1 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 overflow-hidden">
-                {cat.id === 'priceRange' ? (
-                  <PriceRangePanel
-                    priceRange={pendingFilters.priceRange}
-                    setPriceRange={onPriceRange}
-                  />
-                ) : (
-                  <MultiCheckPanel
-                    categoryId={cat.id}
-                    selected={pendingFilters[cat.id]}
-                    onChange={(val) => onToggleMulti(cat.id, val)}
-                  />
+                {activeCategory === cat.id && (
+                  <div className="mt-1 mb-2 ml-1 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 overflow-hidden">
+                    {cat.id === 'priceRange' ? (
+                      <PriceRangePanel
+                        priceRange={pendingFilters.priceRange}
+                        setPriceRange={onPriceRange}
+                      />
+                    ) : cat.id === 'location' ? (
+                      <LocationPanel
+                        location={pendingFilters.location}
+                        setLocation={onLocation}
+                      />
+                    ) : (
+                      <MultiCheckPanel
+                        categoryId={cat.id}
+                        selected={pendingFilters[cat.id]}
+                        onChange={(val) => onToggleMulti(cat.id, val)}
+                      />
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
           </div>
         ))}
       </nav>

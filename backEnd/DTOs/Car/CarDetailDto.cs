@@ -15,6 +15,7 @@ public class CarDetailDto
     public decimal RentalPrice { get; set; }
     public string RentalStatus { get; set; } = null!;
     public string ApprovalStatus { get; set; } = null!;
+    public List<CarImageDto> Images { get; set; } = new();
     public List<DateOnly> Availability { get; set; } = new();
     public List<CarReviewItemDto> Reviews { get; set; } = new();
     public DateTime CreatedAt { get; set; }
