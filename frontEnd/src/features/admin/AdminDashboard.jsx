@@ -1,4 +1,4 @@
-import AdminNavbar from './components/AdminNavbar';
+import Navbar from '../../shared/components/Navbar';
 import StatCard from './components/StatCard';
 import UsersTable from './components/UsersTable';
 import CarPostsTable from './components/CarPostsTable';
@@ -15,7 +15,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <AdminNavbar />
+      <Navbar />
 
       <main className="flex-1 px-10 py-10">
         <div className="max-w-6xl mx-auto">

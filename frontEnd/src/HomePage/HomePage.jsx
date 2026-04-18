@@ -1,4 +1,4 @@
-import Navbar from "../components/layout/Navbar";
+import Navbar from "../shared/components/Navbar";
 import HeroSection from "./components/HeroSection";
 import StatsBar from "./components/StatsBar";
 import FeaturedSection from "./components/FeaturedSection";

@@ -71,7 +71,6 @@ function AnimatedRoutes() {
 }
 
 function App() {
-  console.log("from the app function")
   return (
     <BrowserRouter>
       <NotificationProvider>

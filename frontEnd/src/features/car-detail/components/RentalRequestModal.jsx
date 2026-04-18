@@ -355,8 +355,8 @@ export default function RentalRequestModal({
                       {/* Car info */}
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-mid">
-                          {car.images?.[0] ? (
-                            <img src={car.images[0]} alt={car.name} className="w-full h-full object-cover" />
+                          {car.primaryImageUrl ? (
+                            <img src={car.primaryImageUrl} alt={car.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <Car size={22} className="text-on-surface/30" strokeWidth={1.6} />

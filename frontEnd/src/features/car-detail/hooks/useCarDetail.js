@@ -26,6 +26,16 @@ function plusDays(dateStr, n) {
   return d.toISOString().split('T')[0];
 }
 
+function pickGalleryImages(images = []) {
+  const urls = images.map((img) => img?.image_url).filter(Boolean);
+  return {
+    primary: urls[0] ?? null,
+    main: urls[0] ?? null,
+    side1: urls[1] ?? urls[0] ?? null,
+    side2: urls[2] ?? urls[1] ?? urls[0] ?? null,
+  };
+}
+
 /** Map a backend car detail response to the UI shape. */
 function mapCar(c) {
   const reviewList = (c.reviews ?? []).map((r) => ({
@@ -39,9 +49,12 @@ function mapCar(c) {
       ? Math.round((reviewList.reduce((s, r) => s + r.rating, 0) / reviewList.length) * 10) / 10
       : 0;
 
+  const gallery = pickGalleryImages(c.images ?? []);
+
   return {
     id: c.post_id,
     name: c.title,
+    variant: c.model ?? '',
     year: c.year,
     carType: c.car_type,
     brand: c.brand,
@@ -57,7 +70,12 @@ function mapCar(c) {
     reviews: reviewList,
     avgRating,
     reviewCount: reviewList.length,
-    images: (c.images ?? []).map((img) => img.image_url).filter(Boolean),
+    images: {
+      main: gallery.main,
+      side1: gallery.side1,
+      side2: gallery.side2,
+    },
+    primaryImageUrl: gallery.primary,
     owner: {
       name: c.owner_name ?? '—',
       initials: buildInitials(c.owner_name),
@@ -197,7 +215,7 @@ export function useCarDetail() {
       pending.unshift({
         id: `DS-${Date.now().toString().slice(-5)}`,
         status: 'pending',
-        car: { name: car.name, image: car.images?.[0] ?? null, pricePerDay: car.pricePerDay },
+        car: { name: car.name, image: car.primaryImageUrl ?? null, pricePerDay: car.pricePerDay },
         startDate,
         endDate,
         location,
