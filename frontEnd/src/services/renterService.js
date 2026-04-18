@@ -21,7 +21,11 @@ export async function uploadLicenseImages({ frontImage, backImage }) {
   const formData = new FormData();
   formData.append("front_image", frontImage);
   formData.append("back_image", backImage);
-  const { data } = await apiClient.post("/api/renter/license/images", formData);
+  const { data } = await apiClient.post("/api/renter/license/images", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return data;
 }
 

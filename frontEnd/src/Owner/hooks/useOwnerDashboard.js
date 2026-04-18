@@ -11,34 +11,33 @@ function normalizeImageUrl(url) {
 
 function mapRental(r) {
   return {
-    id: String(r.request_id),
-    carPostId: String(r.post_id ?? ""),
-    renterName: r.renter_name ?? "Unknown Renter",
-    carName: r.car_title ?? "—",
-    dateRange: `${r.start_date ?? "?"} - ${r.end_date ?? "?"}`,
-    startDate: r.start_date,
-    endDate: r.end_date,
-    totalPrice: r.total_price,
+    id: String(r.requestId || r.request_id),
+    carPostId: String(r.postId || r.post_id || ""),
+    renterName: r.renterName || r.renter_name || "Unknown Renter",
+    carName: r.carTitle || r.car_title || "—",
+    dateRange: `${r.startDate || r.start_date || "?"} - ${r.endDate || r.end_date || "?"}`,
+    startDate: r.startDate || r.start_date,
+    endDate: r.endDate || r.end_date,
+    totalPrice: r.totalPrice || r.total_price,
     type: "new",
-    status: (r.status ?? "").toLowerCase(),
-    // Use status as the display label for past decisions
-    decision: (r.status ?? "").toLowerCase(),
-    requestedAt: r.requested_at,
+    status: (r.status || "").toLowerCase(),
+    decision: (r.status || "").toLowerCase(),
+    requestedAt: r.requestedAt || r.requested_at,
     driverLicense: {
-      status: (r.license_status ?? "unknown").toLowerCase(),
-      licenseNumber: r.license_number ?? "—",
-      issuingCountry: r.license_issuing_country ?? "—",
-      expiryDate: r.license_expiry_date ?? "—",
-      imageUrl: normalizeImageUrl(r.license_front_image_url), // used by LicenseVerificationModal currently
-      frontImageUrl: normalizeImageUrl(r.license_front_image_url),
-      backImageUrl: normalizeImageUrl(r.license_back_image_url),
+      status: (r.licenseStatus || r.license_status || "unknown").toLowerCase(),
+      licenseNumber: r.licenseNumber || r.license_number || "—",
+      issuingCountry: r.licenseIssuingCountry || r.license_issuing_country || "—",
+      expiryDate: r.licenseExpiryDate || r.license_expiry_date || "—",
+      imageUrl: normalizeImageUrl(r.licenseFrontImageUrl || r.license_front_image_url),
+      frontImageUrl: normalizeImageUrl(r.licenseFrontImageUrl || r.license_front_image_url),
+      backImageUrl: normalizeImageUrl(r.licenseBackImageUrl || r.license_back_image_url),
     },
-    pickupLocation: r.location ?? "—",
-    totalDays: r.start_date && r.end_date
+    pickupLocation: r.location || "—",
+    totalDays: (r.startDate || r.start_date) && (r.endDate || r.end_date)
       ? Math.max(
           1,
           Math.ceil(
-            (new Date(r.end_date) - new Date(r.start_date)) / (1000 * 60 * 60 * 24)
+            (new Date(r.endDate || r.end_date) - new Date(r.startDate || r.start_date)) / (1000 * 60 * 60 * 24)
           )
         )
       : 0,
