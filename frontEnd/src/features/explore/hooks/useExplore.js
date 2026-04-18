@@ -21,9 +21,17 @@ function getChip(rentalStatus) {
 }
 
 function normalizeImageUrl(url) {
-  if (!url) return null;
-  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+  if (!url) {
+    console.log('[normalizeImageUrl - useExplore] URL is empty or null:', url);
+    return null;
+  }
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    console.log('[normalizeImageUrl - useExplore] URL is absolute/data:', url);
+    return url;
+  }
+  const computed = url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+  console.log(`[normalizeImageUrl - useExplore] Original: "${url}" -> Computed: "${computed}" (API_BASE_URL: ${API_BASE_URL})`);
+  return computed;
 }
 
 /** Map a backend car list item to the shape the UI components expect. */

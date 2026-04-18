@@ -129,7 +129,9 @@ export async function addCarImage(id, imageFile, isPrimary = false) {
   formData.append("image", imageFile);
   const { data } = await apiClient.post(`/api/cars/${id}/images`, formData, {
     params: { isPrimary },
+    headers: { "Content-Type": "multipart/form-data" },
   });
+  console.log(data);
   return data;
   // { image_id, image_url, is_primary, sort_order }
 }

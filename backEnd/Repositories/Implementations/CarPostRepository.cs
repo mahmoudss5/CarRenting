@@ -76,6 +76,7 @@ public class CarPostRepository : ICarPostRepository
 
     public async Task<IEnumerable<CarPost>> GetByOwnerIdAsync(long ownerId) =>
         await _context.CarPosts
+            .Include(c => c.CarImages)
             .Where(c => c.OwnerId == ownerId)
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();

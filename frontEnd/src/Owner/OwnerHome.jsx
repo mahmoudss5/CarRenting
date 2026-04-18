@@ -214,6 +214,10 @@ export default function OwnerHome() {
     }
   };
 
+  const handleDeleteRequest = (post) => {
+    setPendingDelete(post);
+  };
+
   return (
     <OwnerPageLayout>
       <motion.div variants={stagger} initial="hidden" animate="show" className="max-w-[1400px] mx-auto py-8">

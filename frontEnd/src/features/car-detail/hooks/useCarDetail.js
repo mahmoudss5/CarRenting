@@ -29,9 +29,17 @@ function plusDays(dateStr, n) {
 }
 
 function normalizeImageUrl(url) {
-  if (!url) return null;
-  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
-  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+  if (!url) {
+    console.log('[normalizeImageUrl - useCarDetail] URL is empty or null:', url);
+    return null;
+  }
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    console.log('[normalizeImageUrl - useCarDetail] URL is absolute/data:', url);
+    return url;
+  }
+  const computed = url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+  console.log(`[normalizeImageUrl - useCarDetail] Original: "${url}" -> Computed: "${computed}" (API_BASE_URL: ${API_BASE_URL})`);
+  return computed;
 }
 
 function pickGalleryImages(images = []) {
@@ -87,6 +95,7 @@ function mapCar(c) {
     },
     primaryImageUrl: gallery.primary,
     owner: {
+      userId: c.owner_user_id,
       name: c.owner_name ?? '—',
       initials: buildInitials(c.owner_name),
       rating: avgRating > 0 ? avgRating : '—',

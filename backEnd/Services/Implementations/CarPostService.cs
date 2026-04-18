@@ -9,6 +9,7 @@ namespace BackEnd.Services.Implementations;
 
 public class CarPostService : ICarPostService
 {
+    private readonly ILogger<CarPostService> _logger;
     private readonly ICarPostRepository _carPosts;
     private readonly ICarOwnerRepository _carOwners;
     private readonly IReviewRepository _reviews;
@@ -20,8 +21,11 @@ public class CarPostService : ICarPostService
     public CarPostService(ICarPostRepository carPosts, ICarOwnerRepository carOwners,
         IReviewRepository reviews, IAdminActionRepository adminActions,
         INotificationService notifications, ICarImageRepository carImages,
-        IFileStorageService fileStorage)
+        IFileStorageService fileStorage,
+        ILogger<CarPostService> logger
+        )
     {
+        _logger = logger;
         _carPosts = carPosts;
         _carOwners = carOwners;
         _reviews = reviews;
@@ -40,7 +44,9 @@ public class CarPostService : ICarPostService
         var items = cars
             .Select(c => MapToListItem(c, ratingsByCarId.GetValueOrDefault(c.Id, 0)))
             .ToList();
-
+        
+        _logger.Log(LogLevel.Information, "cars data : {Cars}",cars);
+        _logger.Log(LogLevel.Information, "Active listings retrieved: {Count}", items.Count);
         return ResponResult<object>.Ok(new { cars = items, total, page });
     }
     
@@ -176,7 +182,15 @@ public class CarPostService : ICarPostService
             ApprovalStatus = MapApprovalStatus(c.PostStatus),
             RentalStatus = c.CarStatus,
             RentalPrice = c.PricePerDay,
-            CreatedAt = c.CreatedAt
+            CreatedAt = c.CreatedAt,
+            CarType = c.CarType,
+            Brand = c.Brand,
+            Model = c.Model,
+            Year = c.Year,
+            Transmission = c.Transmission,
+            Location = c.Location,
+            PrimaryImageUrl = c.CarImages.FirstOrDefault(i => i.IsPrimary)?.ImageUrl
+                              ?? c.CarImages.OrderBy(i => i.SortOrder).FirstOrDefault()?.ImageUrl
         });
 
         return ResponResult<IEnumerable<OwnerCarDto>>.Ok(result);
@@ -372,6 +386,7 @@ public class CarPostService : ICarPostService
     private static CarDetailDto MapToDetail(CarPost c) => new()
     {
         PostId = c.Id,
+        OwnerUserId = c.Owner.UserId,
         OwnerName = $"{c.Owner.User.FirstName} {c.Owner.User.LastName}".Trim(),
         Title = c.Title,
         Description = c.Description,

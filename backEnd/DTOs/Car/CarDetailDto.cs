@@ -3,6 +3,7 @@ namespace BackEnd.DTOs.Car;
 public class CarDetailDto
 {
     public long PostId { get; set; }
+    public long OwnerUserId { get; set; }
     public string OwnerName { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; }

@@ -2,13 +2,29 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { getMyCars } from "../../services/ownerService";
 import { getCarById, deleteCar } from "../../services/carService";
 
-function mergeCarData(summary, detail) {
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
+function normalizeImageUrl(url) {
+  if (!url) {
+    console.log('[normalizeImageUrl - useOwnerHome] URL is empty or null:', url);
+    return null;
+  }
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    console.log('[normalizeImageUrl - useOwnerHome] URL is absolute/data:', url);
+    return url;
+  }
+  const computed = url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+  console.log(`[normalizeImageUrl - useOwnerHome] Original: "${url}" -> Computed: "${computed}" (API_BASE_URL: ${API_BASE_URL})`);
+  return computed;
+}
+
+function mergeCarData(summary) {
   return {
     id: String(summary.post_id),
-    title: summary.title ?? detail?.title ?? "Untitled",
+    title: summary.title ?? "Untitled",
     approvalStatus: (summary.approval_status ?? "pending").toLowerCase(),
     rentalStatus: (summary.rental_status ?? "available").toLowerCase(),
-    rentalPrice: Number(summary.rental_price ?? detail?.rental_price ?? 0),
+    rentalPrice: Number(summary.rental_price ?? 0),
     createdAt: summary.created_at,
     ownerRentalStatus: (() => {
       const approval = (summary.approval_status ?? "").toLowerCase();
@@ -17,20 +33,13 @@ function mergeCarData(summary, detail) {
       if (rental === "rented") return "Rented";
       return "Active";
     })(),
-    description: detail?.description ?? "",
-    carType: detail?.car_type ?? "—",
-    brand: detail?.brand ?? "—",
-    model: detail?.model ?? "—",
-    year: String(detail?.year ?? "—"),
-    transmission: detail?.transmission ?? "—",
-    location: detail?.location ?? "—",
-    ownerName: detail?.owner_name ?? "—",
-    availability: Array.isArray(detail?.availability) ? detail.availability : [],
-    image: (() => {
-      const imgs = detail?.images ?? [];
-      const primary = imgs.find((i) => i.is_primary);
-      return (primary ?? imgs[0])?.image_url ?? null;
-    })(),
+    carType: summary.car_type ?? "—",
+    brand: summary.brand ?? "—",
+    model: summary.model ?? "—",
+    year: String(summary.year ?? "—"),
+    transmission: summary.transmission ?? "—",
+    location: summary.location ?? "—",
+    image: normalizeImageUrl(summary.primary_image_url),
   };
 }
 
@@ -44,19 +53,12 @@ export default function useOwnerHome() {
     setIsLoading(true);
     setError(null);
     getMyCars()
-      .then(async (summaries) => {
+      .then((summaries) => {
         if (!Array.isArray(summaries)) {
           setPosts([]);
           return;
         }
-        const detailed = await Promise.all(
-          summaries.map((s) =>
-            getCarById(s.post_id)
-              .then((detail) => mergeCarData(s, detail))
-              .catch(() => mergeCarData(s, null))
-          )
-        );
-        setPosts(detailed);
+        setPosts(summaries.map(mergeCarData));
       })
       .catch((err) => {
         console.error(err);
