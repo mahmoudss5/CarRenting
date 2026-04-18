@@ -33,7 +33,7 @@ services:
     ports:
       - "5000:8080"
     volumes:
-      - uploads_data:/app/wwwroot/uploads
+      - ./backEnd/wwwroot/uploads:/app/wwwroot/uploads
     depends_on:
       database:
         condition: service_healthy
@@ -57,7 +57,6 @@ services:
 
 volumes:
   sqlserver_data:
-  uploads_data:
 
 networks:
   app-network:

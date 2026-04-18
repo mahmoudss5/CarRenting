@@ -19,6 +19,7 @@ public class CarPostRepository : ICarPostRepository
     public async Task<CarPost?> GetByIdWithDetailsAsync(long id) =>
         await _context.CarPosts
             .Include(c => c.Owner).ThenInclude(o => o.User)
+            .Include(c => c.CarImages)
             .Include(c => c.AvailabilityCalendars)
             .Include(c => c.Reviews).ThenInclude(r => r.Reviewer)
             .FirstOrDefaultAsync(c => c.Id == id);
@@ -26,6 +27,7 @@ public class CarPostRepository : ICarPostRepository
     public async Task<IEnumerable<CarPost>> GetActiveListingsAsync(int page, int pageSize) =>
         await _context.CarPosts
             .Include(c => c.Owner).ThenInclude(o => o.User)
+            .Include(c => c.CarImages)
             .Include(c => c.Reviews)
             .Where(c => c.PostStatus == "Active")
             .OrderByDescending(c => c.CreatedAt)
@@ -41,6 +43,7 @@ public class CarPostRepository : ICarPostRepository
     {
         var query = _context.CarPosts
             .Include(c => c.Owner).ThenInclude(o => o.User)
+            .Include(c => c.CarImages)
             .Include(c => c.Reviews)
             .Where(c => c.PostStatus == "Active");
 
@@ -73,6 +76,7 @@ public class CarPostRepository : ICarPostRepository
 
     public async Task<IEnumerable<CarPost>> GetByOwnerIdAsync(long ownerId) =>
         await _context.CarPosts
+            .Include(c => c.CarImages)
             .Where(c => c.OwnerId == ownerId)
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();

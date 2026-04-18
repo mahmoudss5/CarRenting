@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Users, Car, AlertCircle } from "lucide-react";
 import { useAdminApproval } from "./hooks/useAdminApproval";
-import AdminNavbar from "./components/AdminNavbar";
+import Navbar from "../shared/components/Navbar";
 import AdminSidebar from "./components/AdminSidebar";
 import StatCard from "./components/StatCard";
 import SectionCard from "./components/SectionCard";
@@ -33,7 +33,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      <AdminNavbar />
+      <Navbar />
 
       <div className="flex flex-1">
         <AdminSidebar />

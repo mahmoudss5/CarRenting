@@ -1,26 +1,16 @@
 import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { X, Upload, CheckCircle2, Clock, Car, Calendar, MapPin, FileText } from 'lucide-react';
+import {
+  X, Upload, CheckCircle2, Clock, Car, Calendar, MapPin,
+  FileText, ShieldCheck, Loader2,
+} from 'lucide-react';
 
 const fmt = (n) =>
   `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-/* ─── Backdrop ─────────────────────────────────────────────── */
-function Backdrop({ onClose }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    />
-  );
-}
-
 /* ─── License Upload Field ──────────────────────────────────── */
-function LicenseUploadField({ label, file, onChange, id }) {
+function LicenseUploadField({ label, file, onChange, id, disabled }) {
   const ref = useRef(null);
   return (
     <div>
@@ -30,8 +20,9 @@ function LicenseUploadField({ label, file, onChange, id }) {
       <button
         type="button"
         onClick={() => ref.current?.click()}
+        disabled={disabled}
         className={[
-          'w-full flex flex-col items-center justify-center gap-2 py-5 rounded-xl border-2 border-dashed transition-colors cursor-pointer bg-transparent',
+          'w-full flex flex-col items-center justify-center gap-2 py-5 rounded-xl border-2 border-dashed transition-colors cursor-pointer bg-transparent disabled:opacity-50 disabled:cursor-not-allowed',
           file
             ? 'border-emerald-400 bg-emerald-50'
             : 'border-surface-dim hover:border-primary/40 hover:bg-primary/4',
@@ -63,6 +54,130 @@ function LicenseUploadField({ label, file, onChange, id }) {
   );
 }
 
+/* ─── Form Field ────────────────────────────────────────────── */
+function FormField({ label, children }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="font-inter text-label-sm font-bold uppercase tracking-[0.05em] text-on-surface/50">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+const inputCls =
+  'w-full rounded-lg border border-surface-dim bg-surface-low px-3 py-2 font-inter text-sm text-on-surface placeholder:text-on-surface/30 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition';
+
+/* ─── License Already On File ───────────────────────────────── */
+function LicenseOnFile() {
+  return (
+    <div className="flex flex-col items-center justify-center text-center gap-3 py-6 px-2">
+      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+        <ShieldCheck size={24} className="text-emerald-600" strokeWidth={2} />
+      </div>
+      <div>
+        <p className="font-manrope font-extrabold text-base text-on-surface">
+          License On File
+        </p>
+        <p className="font-inter text-xs text-on-surface/50 mt-1 leading-relaxed">
+          Your driver's license has already been submitted. You're ready to book!
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── License Form (new license) ───────────────────────────── */
+function LicenseForm({
+  licenseNumber,
+  issuingCountry,
+  expiryDate,
+  licenseFront,
+  licenseBack,
+  onLicenseNumberChange,
+  onIssuingCountryChange,
+  onExpiryDateChange,
+  onLicenseFrontChange,
+  onLicenseBackChange,
+  disabled,
+}) {
+  const allFilled = licenseNumber && issuingCountry && expiryDate && licenseFront && licenseBack;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <p className="font-inter text-label-sm font-bold uppercase tracking-[0.05em] text-on-surface/40 mb-1">
+          Driver's License
+        </p>
+        <p className="font-inter text-xs text-on-surface/40 leading-relaxed">
+          Submit your license details and upload both sides so the owner can verify your identity.
+        </p>
+      </div>
+
+      <FormField label="License Number">
+        <input
+          type="text"
+          className={inputCls}
+          placeholder="e.g. EG-123-456789"
+          value={licenseNumber}
+          onChange={onLicenseNumberChange}
+          disabled={disabled}
+        />
+      </FormField>
+
+      <FormField label="Issuing Country">
+        <input
+          type="text"
+          className={inputCls}
+          placeholder="e.g. Egypt"
+          value={issuingCountry}
+          onChange={onIssuingCountryChange}
+          disabled={disabled}
+        />
+      </FormField>
+
+      <FormField label="Expiry Date">
+        <input
+          type="date"
+          className={inputCls}
+          value={expiryDate}
+          onChange={onExpiryDateChange}
+          disabled={disabled}
+          min={new Date().toISOString().split('T')[0]}
+        />
+      </FormField>
+
+      <LicenseUploadField
+        id="license-front"
+        label="Front Side"
+        file={licenseFront}
+        onChange={onLicenseFrontChange}
+        disabled={disabled}
+      />
+      <LicenseUploadField
+        id="license-back"
+        label="Back Side"
+        file={licenseBack}
+        onChange={onLicenseBackChange}
+        disabled={disabled}
+      />
+
+      {allFilled ? (
+        <div className="flex items-start gap-2 text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2.5">
+          <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 shrink-0" strokeWidth={2} />
+          All fields complete — ready to submit.
+        </div>
+      ) : (
+        <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5">
+          <FileText size={13} className="text-amber-500 mt-0.5 shrink-0" strokeWidth={2} />
+          All fields and both license images are required.
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Success State ─────────────────────────────────────────── */
 function SuccessPane({ car, booking, onClose }) {
   return (
@@ -82,11 +197,11 @@ function SuccessPane({ car, booking, onClose }) {
           Request Sent!
         </h2>
         <p className="font-inter text-body-md text-on-surface/55 max-w-xs mx-auto leading-relaxed">
-          Your rental request for the <strong className="text-on-surface">{car.name}</strong> has been sent to the owner. You'll be notified once they respond.
+          Your rental request for the <strong className="text-on-surface">{car.name}</strong> has
+          been sent to the owner. You'll be notified once they respond.
         </p>
       </motion.div>
 
-      {/* Details pill row */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -104,7 +219,6 @@ function SuccessPane({ car, booking, onClose }) {
         </span>
       </motion.div>
 
-      {/* Waiting banner */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -148,25 +262,51 @@ export default function RentalRequestModal({
   onClose,
   car,
   booking,
+  hasLicense,
   licenseFront,
   licenseBack,
   onLicenseFrontChange,
   onLicenseBackChange,
+  licenseNumber,
+  issuingCountry,
+  expiryDate,
+  onLicenseNumberChange,
+  onIssuingCountryChange,
+  onExpiryDateChange,
   onConfirm,
   isSubmitting,
   isSuccess,
+  submitError,
 }) {
   if (!car) return null;
 
   const { numDays, subtotal, serviceFee, insurance, total } = booking;
   const dailyRate = subtotal / numDays;
-  const canSubmit = licenseFront && licenseBack;
+
+  // canSubmit depends on whether user has an existing license
+  const newLicenseReady =
+    !!licenseNumber && !!issuingCountry && !!expiryDate && !!licenseFront && !!licenseBack;
+  const canSubmit = hasLicense === null
+    ? false                              // still loading — wait
+    : hasLicense
+      ? true                             // license on file — always ready
+      : newLicenseReady || !!submitError; // new license — all fields needed
+
+  const subtitleText = hasLicense
+    ? 'Review your booking details below.'
+    : 'Review your booking and provide your driver\'s license to proceed.';
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <Backdrop onClose={!isSubmitting ? onClose : undefined} />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            onClick={!isSubmitting ? onClose : undefined}
+          />
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <motion.div
@@ -201,12 +341,12 @@ export default function RentalRequestModal({
                       Confirm Rental Request
                     </h2>
                     <p className="font-inter text-body-md text-on-surface/45 mt-0.5">
-                      Review your booking and upload your driver's license to proceed.
+                      {subtitleText}
                     </p>
                   </div>
 
                   <div className="px-7 py-6 grid grid-cols-[1fr_1px_1fr] gap-6">
-                    {/* ─ Left: transaction details ─ */}
+                    {/* ─ Left: trip summary ─ */}
                     <div className="flex flex-col gap-5">
                       <p className="font-inter text-label-sm font-bold uppercase tracking-[0.05em] text-on-surface/40">
                         Trip Summary
@@ -215,8 +355,8 @@ export default function RentalRequestModal({
                       {/* Car info */}
                       <div className="flex items-center gap-3">
                         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-surface-mid">
-                          {car.images?.[0] ? (
-                            <img src={car.images[0]} alt={car.name} className="w-full h-full object-cover" />
+                          {car.primaryImageUrl ? (
+                            <img src={car.primaryImageUrl} alt={car.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <Car size={22} className="text-on-surface/30" strokeWidth={1.6} />
@@ -224,8 +364,12 @@ export default function RentalRequestModal({
                           )}
                         </div>
                         <div>
-                          <p className="font-manrope font-bold text-base text-on-surface leading-tight">{car.name}</p>
-                          <p className="font-inter text-xs text-on-surface/45 mt-0.5">{car.location ?? booking.location}</p>
+                          <p className="font-manrope font-bold text-base text-on-surface leading-tight">
+                            {car.name}
+                          </p>
+                          <p className="font-inter text-xs text-on-surface/45 mt-0.5">
+                            {car.location ?? booking.location}
+                          </p>
                         </div>
                       </div>
 
@@ -271,48 +415,41 @@ export default function RentalRequestModal({
                     {/* Divider */}
                     <div className="bg-surface-dim self-stretch" />
 
-                    {/* ─ Right: license upload ─ */}
+                    {/* ─ Right: license section ─ */}
                     <div className="flex flex-col gap-5">
-                      <div>
-                        <p className="font-inter text-label-sm font-bold uppercase tracking-[0.05em] text-on-surface/40 mb-1">
-                          Driver's License
-                        </p>
-                        <p className="font-inter text-xs text-on-surface/40 leading-relaxed">
-                          Upload both sides of your valid driver's license. This is required to verify your identity before the owner approves.
-                        </p>
-                      </div>
-
-                      <LicenseUploadField
-                        id="license-front"
-                        label="Front Side"
-                        file={licenseFront}
-                        onChange={onLicenseFrontChange}
-                      />
-                      <LicenseUploadField
-                        id="license-back"
-                        label="Back Side"
-                        file={licenseBack}
-                        onChange={onLicenseBackChange}
-                      />
-
-                      {!canSubmit && (
-                        <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5">
-                          <FileText size={13} className="text-amber-500 mt-0.5 shrink-0" strokeWidth={2} />
-                          Both sides are required to submit your request.
+                      {hasLicense === null ? (
+                        <div className="flex flex-col items-center justify-center py-10 gap-3 text-on-surface/40">
+                          <Loader2 size={24} className="animate-spin" strokeWidth={2} />
+                          <p className="font-inter text-xs">Checking license status…</p>
                         </div>
-                      )}
-
-                      {canSubmit && (
-                        <div className="flex items-start gap-2 text-xs text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2.5">
-                          <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 shrink-0" strokeWidth={2} />
-                          Both sides uploaded — ready to submit.
-                        </div>
+                      ) : hasLicense ? (
+                        <LicenseOnFile />
+                      ) : (
+                        <LicenseForm
+                          licenseNumber={licenseNumber}
+                          issuingCountry={issuingCountry}
+                          expiryDate={expiryDate}
+                          licenseFront={licenseFront}
+                          licenseBack={licenseBack}
+                          onLicenseNumberChange={onLicenseNumberChange}
+                          onIssuingCountryChange={onIssuingCountryChange}
+                          onExpiryDateChange={onExpiryDateChange}
+                          onLicenseFrontChange={onLicenseFrontChange}
+                          onLicenseBackChange={onLicenseBackChange}
+                          disabled={isSubmitting}
+                        />
                       )}
                     </div>
                   </div>
 
                   {/* Footer CTA */}
                   <div className="px-7 pb-7">
+                    {submitError && (
+                      <div className="mb-3 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                        <span className="text-red-500 text-sm mt-0.5">⚠</span>
+                        <p className="font-inter text-sm text-red-700 leading-snug">{submitError}</p>
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={onConfirm}

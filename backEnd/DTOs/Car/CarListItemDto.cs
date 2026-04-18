@@ -14,4 +14,5 @@ public class CarListItemDto
     public string RentalStatus { get; set; } = null!;
     public string OwnerName { get; set; } = null!;
     public double AverageRating { get; set; }
+    public string? PrimaryImageUrl { get; set; }
 }

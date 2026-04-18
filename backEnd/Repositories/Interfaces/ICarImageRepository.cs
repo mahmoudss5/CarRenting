@@ -8,4 +8,5 @@ public interface ICarImageRepository
     Task<IEnumerable<CarImage>> GetByCarPostIdAsync(long carPostId);
     Task<CarImage> CreateAsync(CarImage image);
     Task DeleteAsync(CarImage image);
+    Task UpdateAsync(CarImage img);
 }

@@ -4,6 +4,8 @@ namespace BackEnd.Services.Implementations;
 
 public class LocalFileStorageService : IFileStorageService
 {
+    
+    private readonly ILogger<LocalFileStorageService> _logger;
     private static readonly HashSet<string> AllowedExtensions =
         new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp" };
 
@@ -11,14 +13,16 @@ public class LocalFileStorageService : IFileStorageService
 
     private readonly string _uploadsRoot;
 
-    public LocalFileStorageService(IWebHostEnvironment env)
+    public LocalFileStorageService(IWebHostEnvironment env,ILogger<LocalFileStorageService> logger)
     {
         // Saves under  <ContentRoot>/wwwroot/uploads/
+         _logger = logger;
         _uploadsRoot = Path.Combine(env.WebRootPath, "uploads");
     }
 
     public async Task<string> SaveAsync(IFormFile file, string subFolder)
     {
+        _logger.LogInformation("Saving file to local storage.");
         if (file is null || file.Length == 0)
             throw new ArgumentException("File is empty.");
 
@@ -38,6 +42,7 @@ public class LocalFileStorageService : IFileStorageService
         await using var stream = new FileStream(fullPath, FileMode.Create);
         await file.CopyToAsync(stream);
 
+        _logger.LogInformation("File saved successfully.");
         // Return a URL-style relative path
         return $"/uploads/{subFolder}/{fileName}".Replace("\\", "/");
     }

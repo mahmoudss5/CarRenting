@@ -13,6 +13,7 @@ import AdminVerificationsPage from "./Admin/pages/AdminVerificationsPage";
 import OwnerDashboard from "./Owner/OwnerDashboard";
 import OwnerHome from "./Owner/OwnerHome";
 import CreateCarPostPage from "./Owner/CreateCarPostPage";
+import EditCarPostPage from "./Owner/EditCarPostPage";
 import OwnerProfileSettings from "./Owner/OwnerProfileSettings";
 // Feature pages
 import RenterHomePage from "./features/home/RenterHomePage";
@@ -52,6 +53,7 @@ function AnimatedRoutes() {
           <Route path="/owner" element={<OwnerDashboard />} />
           <Route path="/owner/home" element={<OwnerHome />} />
           <Route path="/owner/create-post" element={<CreateCarPostPage />} />
+          <Route path="/owner/edit-post/:postId" element={<EditCarPostPage />} />
           <Route path="/owner/settings" element={<OwnerProfileSettings />} />
           <Route path="/owner/*" element={<Navigate to="/owner/home" replace />} />
 
@@ -69,7 +71,6 @@ function AnimatedRoutes() {
 }
 
 function App() {
-  console.log("from the app function")
   return (
     <BrowserRouter>
       <NotificationProvider>

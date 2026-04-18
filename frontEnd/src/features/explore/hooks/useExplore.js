@@ -2,15 +2,41 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { searchCars } from '../../../services/carService';
 import { FILTER_CATEGORIES, FILTER_OPTIONS, SORT_OPTIONS, CARS_PER_PAGE } from '../data/exploreCars';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
 const INITIAL_FILTERS = {
   priceRange: { min: 0, max: 1000 },
+  location: '',
   carType: [],
   brand: [],
   transmission: [],
 };
 
+/** Map rentalStatus to chip props for the card badge. */
+function getChip(rentalStatus) {
+  const s = (rentalStatus ?? '').toLowerCase();
+  if (s === 'rented')    return { chipLabel: 'Rented',    chipVariant: 'rented'    };
+  if (s === 'reserved')  return { chipLabel: 'Reserved',  chipVariant: 'lowstock'  };
+  return { chipLabel: null, chipVariant: null };
+}
+
+function normalizeImageUrl(url) {
+  if (!url) {
+    console.log('[normalizeImageUrl - useExplore] URL is empty or null:', url);
+    return null;
+  }
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    console.log('[normalizeImageUrl - useExplore] URL is absolute/data:', url);
+    return url;
+  }
+  const computed = url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+  console.log(`[normalizeImageUrl - useExplore] Original: "${url}" -> Computed: "${computed}" (API_BASE_URL: ${API_BASE_URL})`);
+  return computed;
+}
+
 /** Map a backend car list item to the shape the UI components expect. */
 function mapCar(c) {
+  const { chipLabel, chipVariant } = getChip(c.rental_status);
   return {
     id: c.post_id,
     name: c.title,
@@ -21,10 +47,12 @@ function mapCar(c) {
     transmission: c.transmission,
     location: c.location,
     pricePerDay: Number(c.rental_price),
-    rentalStatus: c.rental_status,
+    rentalStatus: (c.rental_status ?? '').toLowerCase(),
     ownerName: c.owner_name,
     averageRating: c.average_rating ?? 0,
-    image: null,
+    chipLabel,
+    chipVariant,
+    image: normalizeImageUrl(c.primary_image_url),
   };
 }
 
@@ -51,10 +79,15 @@ export function useExplore() {
         maxPrice: filters.priceRange.max < 1000 ? filters.priceRange.max : undefined,
         type: filters.carType.length === 1 ? filters.carType[0] : undefined,
         brand: filters.brand.length === 1 ? filters.brand[0] : undefined,
-        transmission: filters.transmission.length === 1 ? filters.transmission[0] : undefined,
+        location: filters.location.trim() || undefined,
+        // note: backend CarSearchQueryDto has no transmission field — filtered client-side
       };
       const data = await searchCars(params);
-      const list = Array.isArray(data) ? data : (data?.items ?? data?.data ?? []);
+      // SearchAsync returns { results: [...], total }
+      // GetActiveListingsAsync returns { cars: [...], total, page }
+      const list = Array.isArray(data)
+        ? data
+        : (data?.results ?? data?.cars ?? data?.items ?? data?.data ?? []);
       setCars(list.map(mapCar));
       setTotalCount(data?.total ?? list.length);
     } catch (err) {
@@ -70,13 +103,20 @@ export function useExplore() {
     fetchCars(appliedFilters, currentPage);
   }, [fetchCars, appliedFilters, currentPage]);
 
-  // Client-side sort of the current page result
+  // Client-side sort + transmission filter (backend doesn't accept transmission param)
   const sortedCars = useMemo(() => {
-    const copy = [...cars];
-    if (sort === 'price-asc') copy.sort((a, b) => a.pricePerDay - b.pricePerDay);
-    if (sort === 'price-desc') copy.sort((a, b) => b.pricePerDay - a.pricePerDay);
-    return copy;
-  }, [cars, sort]);
+    let result = [...cars];
+    if (appliedFilters.transmission.length > 0) {
+      result = result.filter((c) =>
+        appliedFilters.transmission.some(
+          (t) => t.toLowerCase() === (c.transmission ?? '').toLowerCase()
+        )
+      );
+    }
+    if (sort === 'price-asc')  result.sort((a, b) => a.pricePerDay - b.pricePerDay);
+    if (sort === 'price-desc') result.sort((a, b) => b.pricePerDay - a.pricePerDay);
+    return result;
+  }, [cars, sort, appliedFilters.transmission]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / CARS_PER_PAGE));
 
@@ -89,6 +129,10 @@ export function useExplore() {
         : [...current, value];
       return { ...prev, [key]: updated };
     });
+  };
+
+  const setLocation = (value) => {
+    setPendingFilters((prev) => ({ ...prev, location: value }));
   };
 
   const setPriceRange = (min, max) => {
@@ -127,6 +171,7 @@ export function useExplore() {
     setActiveCategory,
     toggleMultiFilter,
     setPriceRange,
+    setLocation,
     applyFilters,
     resetFilters,
     setSort,

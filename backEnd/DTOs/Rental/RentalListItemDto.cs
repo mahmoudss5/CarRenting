@@ -3,6 +3,7 @@ namespace BackEnd.DTOs.Rental;
 public class RentalListItemDto
 {
     public long RequestId { get; set; }
+    public long CarPostId { get; set; }
     public string CarTitle { get; set; } = null!;
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }

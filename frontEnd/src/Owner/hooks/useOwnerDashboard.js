@@ -1,35 +1,43 @@
 import { useState, useEffect, useMemo } from "react";
 import { getOwnerRentals, acceptRental, rejectRental, getMyCars } from "../../services/ownerService";
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
+function normalizeImageUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+}
+
 function mapRental(r) {
   return {
-    id: String(r.request_id),
-    carPostId: String(r.post_id ?? ""),
-    renterName: r.renter_name ?? "Unknown Renter",
-    carName: r.car_title ?? "—",
-    dateRange: `${r.start_date ?? "?"} - ${r.end_date ?? "?"}`,
-    startDate: r.start_date,
-    endDate: r.end_date,
-    totalPrice: r.total_price,
+    id: String(r.requestId || r.request_id),
+    carPostId: String(r.postId || r.post_id || ""),
+    renterName: r.renterName || r.renter_name || "Unknown Renter",
+    carName: r.carTitle || r.car_title || "—",
+    dateRange: `${r.startDate || r.start_date || "?"} - ${r.endDate || r.end_date || "?"}`,
+    startDate: r.startDate || r.start_date,
+    endDate: r.endDate || r.end_date,
+    totalPrice: r.totalPrice || r.total_price,
     type: "new",
-    status: (r.status ?? "").toLowerCase(),
-    // Use status as the display label for past decisions
-    decision: (r.status ?? "").toLowerCase(),
-    requestedAt: r.requested_at,
-    // License info is not in OwnerRentalDto — shown as placeholder
+    status: (r.status || "").toLowerCase(),
+    decision: (r.status || "").toLowerCase(),
+    requestedAt: r.requestedAt || r.requested_at,
     driverLicense: {
-      status: "unknown",
-      licenseNumber: "—",
-      submittedAt: "—",
-      expiryDate: "—",
-      imageUrl: null,
+      status: (r.licenseStatus || r.license_status || "unknown").toLowerCase(),
+      licenseNumber: r.licenseNumber || r.license_number || "—",
+      issuingCountry: r.licenseIssuingCountry || r.license_issuing_country || "—",
+      expiryDate: r.licenseExpiryDate || r.license_expiry_date || "—",
+      imageUrl: normalizeImageUrl(r.licenseFrontImageUrl || r.license_front_image_url),
+      frontImageUrl: normalizeImageUrl(r.licenseFrontImageUrl || r.license_front_image_url),
+      backImageUrl: normalizeImageUrl(r.licenseBackImageUrl || r.license_back_image_url),
     },
-    pickupLocation: r.location ?? "—",
-    totalDays: r.start_date && r.end_date
+    pickupLocation: r.location || "—",
+    totalDays: (r.startDate || r.start_date) && (r.endDate || r.end_date)
       ? Math.max(
           1,
           Math.ceil(
-            (new Date(r.end_date) - new Date(r.start_date)) / (1000 * 60 * 60 * 24)
+            (new Date(r.endDate || r.end_date) - new Date(r.startDate || r.start_date)) / (1000 * 60 * 60 * 24)
           )
         )
       : 0,
@@ -112,6 +120,26 @@ export default function useOwnerDashboard() {
     }
   };
 
+  const verifyLicense = (requestId) => {
+    setRentals((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, driverLicense: { ...r.driverLicense, status: "verified" } }
+          : r
+      )
+    );
+  };
+
+  const rejectLicense = (requestId) => {
+    setRentals((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, driverLicense: { ...r.driverLicense, status: "rejected" } }
+          : r
+      )
+    );
+  };
+
   return {
     newRequests,
     pastRequests,
@@ -123,7 +151,7 @@ export default function useOwnerDashboard() {
     refetch: fetchAll,
     acceptRentalRequest,
     rejectRentalRequest,
-    verifyLicense: () => {},
-    rejectLicense: () => {},
+    verifyLicense,
+    rejectLicense,
   };
 }

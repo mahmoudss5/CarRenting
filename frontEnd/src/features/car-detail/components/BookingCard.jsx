@@ -1,6 +1,7 @@
 import PriceBreakdown from './PriceBreakdown';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import { SHADOW_AMBIENT } from '../../../design/tokens';
+import { getUser } from '../../../lib/auth';
 
 /**
  * Sticky right-column booking card.
@@ -9,6 +10,9 @@ import { SHADOW_AMBIENT } from '../../../design/tokens';
 export default function BookingCard({ car, booking, handlers }) {
   const { startDate, endDate, location, total } = booking;
   const { setStartDate, setEndDate, setLocation, handleSubmit } = handlers;
+  
+  const user = getUser();
+  const isOwner = user && String(user.nameid) === String(car.owner?.userId);
 
   return (
     <div
@@ -90,8 +94,8 @@ export default function BookingCard({ car, booking, handlers }) {
         <PriceBreakdown booking={booking} />
 
         {/* CTA */}
-        <PrimaryButton type="submit" size="lg" className="w-full justify-center">
-          Request Rental →
+        <PrimaryButton type="submit" size="lg" className="w-full justify-center" disabled={isOwner}>
+          {isOwner ? "You own this car" : "Request Rental →"}
         </PrimaryButton>
       </form>
 

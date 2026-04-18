@@ -2,6 +2,8 @@
  * Vehicle owner info card — surface-container-low background, no border.
  */
 export default function OwnerCard({ owner }) {
+  if (!owner) return null;
+
   return (
     <div className="mt-8 bg-surface-container-low rounded-xl p-5 flex items-center gap-4">
       {/* Avatar */}

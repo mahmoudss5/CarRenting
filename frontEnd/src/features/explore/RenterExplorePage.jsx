@@ -20,6 +20,7 @@ export default function RenterExplorePage() {
     setActiveCategory,
     toggleMultiFilter,
     setPriceRange,
+    setLocation,
     applyFilters,
     resetFilters,
     setSort,
@@ -41,6 +42,7 @@ export default function RenterExplorePage() {
                   onCategoryClick={setActiveCategory}
                   onToggleMulti={toggleMultiFilter}
                   onPriceRange={setPriceRange}
+                  onLocation={setLocation}
                   onApply={applyFilters}
                   onReset={resetFilters}
                 />

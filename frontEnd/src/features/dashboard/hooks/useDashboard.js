@@ -5,25 +5,27 @@ import { submitLicense, uploadLicenseImages, getMyLicense } from '../../../servi
 
 /** Map a backend rental to the dashboard booking shape. */
 function mapRental(r) {
-  const status = (r.status ?? '').toLowerCase();
+  const status = (r.status || '').toLowerCase();
   return {
-    id: `DS-${r.request_id}`,
-    requestId: r.request_id,
+    id: `DS-${r.requestId || r.request_id}`,
+    requestId: r.requestId || r.request_id,
     status,
     car: {
-      name: r.car_title,
+      name: r.carTitle || r.car_title || "Unknown Car",
+      postId: r.carPostId || r.car_post_id || null,   // needed for review submission
       image: null,
       pricePerDay: null,
     },
-    startDate: r.start_date,
-    endDate: r.end_date,
-    total: r.total_price,
-    submittedAt: r.requested_at
-      ? new Date(r.requested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    startDate: r.startDate || r.start_date,
+    endDate: r.endDate || r.end_date,
+    total: r.totalPrice || r.total_price || 0,
+    totalCost: r.totalPrice || r.total_price || 0, // Used by ActiveBookingCard
+    submittedAt: (r.requestedAt || r.requested_at)
+      ? new Date(r.requestedAt || r.requested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : '',
     location: '',
-    pickup: { date: r.start_date, time: '' },
-    dropoff: { date: r.end_date, time: '' },
+    pickup: { date: r.startDate || r.start_date, time: '' },
+    dropoff: { date: r.endDate || r.end_date, time: '' },
   };
 }
 

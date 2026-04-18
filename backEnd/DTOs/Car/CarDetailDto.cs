@@ -3,6 +3,7 @@ namespace BackEnd.DTOs.Car;
 public class CarDetailDto
 {
     public long PostId { get; set; }
+    public long OwnerUserId { get; set; }
     public string OwnerName { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
@@ -15,6 +16,7 @@ public class CarDetailDto
     public decimal RentalPrice { get; set; }
     public string RentalStatus { get; set; } = null!;
     public string ApprovalStatus { get; set; } = null!;
+    public List<CarImageDto> Images { get; set; } = new();
     public List<DateOnly> Availability { get; set; } = new();
     public List<CarReviewItemDto> Reviews { get; set; } = new();
     public DateTime CreatedAt { get; set; }
