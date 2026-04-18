@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { searchCars } from '../../../services/carService';
 import { FILTER_CATEGORIES, FILTER_OPTIONS, SORT_OPTIONS, CARS_PER_PAGE } from '../data/exploreCars';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
 const INITIAL_FILTERS = {
   priceRange: { min: 0, max: 1000 },
   location: '',
@@ -16,6 +18,12 @@ function getChip(rentalStatus) {
   if (s === 'rented')    return { chipLabel: 'Rented',    chipVariant: 'rented'    };
   if (s === 'reserved')  return { chipLabel: 'Reserved',  chipVariant: 'lowstock'  };
   return { chipLabel: null, chipVariant: null };
+}
+
+function normalizeImageUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
 }
 
 /** Map a backend car list item to the shape the UI components expect. */
@@ -36,7 +44,7 @@ function mapCar(c) {
     averageRating: c.average_rating ?? 0,
     chipLabel,
     chipVariant,
-    image: c.primary_image_url ?? null,
+    image: normalizeImageUrl(c.primary_image_url),
   };
 }
 

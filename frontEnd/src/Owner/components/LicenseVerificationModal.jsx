@@ -19,15 +19,6 @@ const STATUS_CONFIG = {
   },
 };
 
-/**
- * LicenseVerificationModal
- *
- * Props:
- *   request       – full rental request object (renterName, driverLicense)
- *   onClose()     – dismiss the modal
- *   onVerify(id)  – mark license as verified
- *   onReject(id)  – mark license as rejected
- */
 export default function LicenseVerificationModal({ request, onClose, onVerify, onReject }) {
   const { driverLicense: license, renterName } = request;
   const cfg = STATUS_CONFIG[license.status] ?? STATUS_CONFIG.pending;

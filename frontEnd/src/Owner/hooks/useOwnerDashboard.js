@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { getOwnerRentals, acceptRental, rejectRental, getMyCars } from "../../services/ownerService";
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
+function normalizeImageUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+}
+
 function mapRental(r) {
   return {
     id: String(r.request_id),
@@ -16,13 +24,14 @@ function mapRental(r) {
     // Use status as the display label for past decisions
     decision: (r.status ?? "").toLowerCase(),
     requestedAt: r.requested_at,
-    // License info is not in OwnerRentalDto — shown as placeholder
     driverLicense: {
-      status: "unknown",
-      licenseNumber: "—",
-      submittedAt: "—",
-      expiryDate: "—",
-      imageUrl: null,
+      status: (r.license_status ?? "unknown").toLowerCase(),
+      licenseNumber: r.license_number ?? "—",
+      issuingCountry: r.license_issuing_country ?? "—",
+      expiryDate: r.license_expiry_date ?? "—",
+      imageUrl: normalizeImageUrl(r.license_front_image_url), // used by LicenseVerificationModal currently
+      frontImageUrl: normalizeImageUrl(r.license_front_image_url),
+      backImageUrl: normalizeImageUrl(r.license_back_image_url),
     },
     pickupLocation: r.location ?? "—",
     totalDays: r.start_date && r.end_date
@@ -112,6 +121,26 @@ export default function useOwnerDashboard() {
     }
   };
 
+  const verifyLicense = (requestId) => {
+    setRentals((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, driverLicense: { ...r.driverLicense, status: "verified" } }
+          : r
+      )
+    );
+  };
+
+  const rejectLicense = (requestId) => {
+    setRentals((prev) =>
+      prev.map((r) =>
+        r.id === requestId
+          ? { ...r, driverLicense: { ...r.driverLicense, status: "rejected" } }
+          : r
+      )
+    );
+  };
+
   return {
     newRequests,
     pastRequests,
@@ -123,7 +152,7 @@ export default function useOwnerDashboard() {
     refetch: fetchAll,
     acceptRentalRequest,
     rejectRentalRequest,
-    verifyLicense: () => {},
-    rejectLicense: () => {},
+    verifyLicense,
+    rejectLicense,
   };
 }

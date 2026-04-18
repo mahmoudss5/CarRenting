@@ -49,6 +49,14 @@ function mapCar(c) {
   };
 }
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
+function normalizeImageUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+}
+
 function mapLicense(l) {
   const name = l.renter_name ?? "";
   return {
@@ -67,7 +75,9 @@ function mapLicense(l) {
     documentName: l.license_number
       ? `license_${l.license_number}.pdf`
       : "license_document.pdf",
-    imageUrl: l.image_url ?? null,
+    imageUrl: normalizeImageUrl(l.image_url ?? l.front_image_url),
+    frontImageUrl: normalizeImageUrl(l.front_image_url),
+    backImageUrl: normalizeImageUrl(l.back_image_url),
     submittedAt: formatDate(l.submitted_at),
     status: (l.verification_status ?? "pending").toLowerCase(),
   };

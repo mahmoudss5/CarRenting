@@ -294,7 +294,7 @@ public class CarPostService : ICarPostService
             foreach (var img in imageList)
             {
                 img.IsPrimary = false;
-                await _carImages.CreateAsync(img);
+                await _carImages.UpdateAsync(img);
             }
         }
 

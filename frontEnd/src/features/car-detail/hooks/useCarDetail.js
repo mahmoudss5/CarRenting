@@ -5,6 +5,8 @@ import { createRental } from '../../../services/rentalService';
 import { getMyLicense, submitLicense, uploadLicenseImages } from '../../../services/renterService';
 import { getUser } from '../../../lib/auth';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
 function calcDays(start, end) {
   if (!start || !end) return 1;
   const diff = (new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24);
@@ -26,8 +28,16 @@ function plusDays(dateStr, n) {
   return d.toISOString().split('T')[0];
 }
 
+function normalizeImageUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+}
+
 function pickGalleryImages(images = []) {
-  const urls = images.map((img) => img?.image_url).filter(Boolean);
+  const urls = images
+    .map((img) => normalizeImageUrl(img?.image_url))
+    .filter(Boolean);
   return {
     primary: urls[0] ?? null,
     main: urls[0] ?? null,

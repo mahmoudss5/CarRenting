@@ -6,6 +6,14 @@ import AvatarInitials from "../../components/ui/AvatarInitials";
 import ActionButton from "../../components/ui/ActionButton";
 import { getAllLicenses, verifyLicense, rejectLicense } from "../../services/adminService";
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
+function normalizeImageUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+}
+
 function mapLicense(l) {
   const name = l.renter_name ?? "Unknown";
   return {
@@ -17,8 +25,8 @@ function mapLicense(l) {
     submittedAt: l.submitted_at
       ? new Date(l.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
       : "—",
-    frontImageUrl: l.front_image_url ?? null,
-    backImageUrl: l.back_image_url ?? null,
+    frontImageUrl: normalizeImageUrl(l.front_image_url),
+    backImageUrl: normalizeImageUrl(l.back_image_url),
   };
 }
 

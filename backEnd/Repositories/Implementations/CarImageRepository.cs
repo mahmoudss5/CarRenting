@@ -34,4 +34,9 @@ public class CarImageRepository : ICarImageRepository
         _context.CarImages.Remove(image);
         await _context.SaveChangesAsync();
     }
+
+    public async Task UpdateAsync(CarImage img)
+    {
+         _context.CarImages.Update(img);
+    }
 }
