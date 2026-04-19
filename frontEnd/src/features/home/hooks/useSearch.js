@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Manages the hero search form state.
  * Returns values and handlers to be passed into SearchBar.
  */
 export function useSearch() {
+  const navigate = useNavigate();
   const [values, setValues] = useState({
     location: '',
     from: '',
@@ -19,8 +21,15 @@ export function useSearch() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // TODO: navigate to /search?location=...&from=...&to=...&carType=...
-    console.log('Search submitted:', values);
+    const params = new URLSearchParams();
+
+    if (values.location.trim()) params.set('location', values.location.trim());
+    if (values.carType) params.set('carType', values.carType);
+    if (values.from) params.set('from', values.from);
+    if (values.to) params.set('to', values.to);
+
+    const query = params.toString();
+    navigate(query ? `/renter-explore?${query}` : '/renter-explore');
   };
 
   return { values, handleChange, handleSearch };

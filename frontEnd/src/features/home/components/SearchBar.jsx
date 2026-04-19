@@ -3,10 +3,11 @@ import PrimaryButton from '../../../shared/components/PrimaryButton';
 
 const CAR_TYPE_OPTIONS = [
   { value: '', label: 'All Vehicles' },
-  { value: 'electric', label: 'Electric' },
-  { value: 'suv', label: 'SUV' },
-  { value: 'performance', label: 'Performance' },
-  { value: 'luxury', label: 'Luxury' },
+  { value: 'Sedan', label: 'Sedan' },
+  { value: 'SUV', label: 'SUV' },
+  { value: 'Sports', label: 'Sports' },
+  { value: 'Coupe', label: 'Coupe' },
+  { value: 'Truck', label: 'Truck' },
 ];
 
 /**

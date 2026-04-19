@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { searchCars } from '../../../services/carService';
 import { FILTER_CATEGORIES, FILTER_OPTIONS, SORT_OPTIONS, CARS_PER_PAGE } from '../data/exploreCars';
 
@@ -11,6 +12,20 @@ const INITIAL_FILTERS = {
   brand: [],
   transmission: [],
 };
+
+function getFiltersFromSearchParams(searchParams) {
+  const location = (searchParams.get('location') ?? '').trim();
+  const carTypeParam = (searchParams.get('carType') ?? '').trim();
+  const normalizedCarType = FILTER_OPTIONS.carType.find(
+    (opt) => opt.toLowerCase() === carTypeParam.toLowerCase()
+  );
+
+  return {
+    ...INITIAL_FILTERS,
+    location,
+    carType: normalizedCarType ? [normalizedCarType] : [],
+  };
+}
 
 /** Map rentalStatus to chip props for the card badge. */
 function getChip(rentalStatus) {
@@ -57,14 +72,20 @@ function mapCar(c) {
 }
 
 export function useExplore() {
+  const [searchParams] = useSearchParams();
+  const querySeedFilters = useMemo(
+    () => getFiltersFromSearchParams(searchParams),
+    [searchParams]
+  );
+
   const [cars, setCars] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [activeCategory, setActiveCategory] = useState('priceRange');
-  const [pendingFilters, setPendingFilters] = useState(INITIAL_FILTERS);
-  const [appliedFilters, setAppliedFilters] = useState(INITIAL_FILTERS);
+  const [pendingFilters, setPendingFilters] = useState(querySeedFilters);
+  const [appliedFilters, setAppliedFilters] = useState(querySeedFilters);
   const [sort, setSort] = useState('recommended');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -102,6 +123,12 @@ export function useExplore() {
   useEffect(() => {
     fetchCars(appliedFilters, currentPage);
   }, [fetchCars, appliedFilters, currentPage]);
+
+  useEffect(() => {
+    setPendingFilters(querySeedFilters);
+    setAppliedFilters(querySeedFilters);
+    setCurrentPage(1);
+  }, [querySeedFilters]);
 
   // Client-side sort + transmission filter (backend doesn't accept transmission param)
   const sortedCars = useMemo(() => {
