@@ -20,7 +20,11 @@ export async function register({ fullName, email, password, role }) {
  * Body: { email, password }
  */
 export async function login({ email, password }) {
-  const { data } = await apiClient.post("/api/auth/login", { email, password });
+  const { data } = await apiClient.post(
+    "/api/auth/login",
+    { email, password },
+    { skipAuthRedirect: true }
+  );
   return data; // { token, user: { user_id, full_name, email, role, status } }
 }
 

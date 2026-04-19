@@ -22,7 +22,8 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const shouldSkipRedirect = error.config?.skipAuthRedirect;
+    if (error.response?.status === 401 && !shouldSkipRedirect) {
       clearAuth();
       webSocketService.disconnect();
       window.location.href = "/login";
