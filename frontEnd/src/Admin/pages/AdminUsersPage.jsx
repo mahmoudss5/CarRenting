@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import { Users, Search, UserCheck, UserX, Shield } from "lucide-react";
 import AdminLayout from "../AdminLayout";
 import AvatarInitials from "../../components/ui/AvatarInitials";
-import ActionButton from "../../components/ui/ActionButton";
-import { getAllUsers, approveUser, rejectUser } from "../../services/adminService";
+import { getAllUsers } from "../../services/adminService";
 
 function mapUser(u) {
   const name = u.full_name ?? "";
@@ -28,29 +27,12 @@ function mapUser(u) {
 const fadeUp = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 const stagger = { show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } } };
 
-const STATUS_STYLES = {
-  active:    { label: "Active",    bg: "#dcfce7", color: "#166534", dot: "#16a34a"  },
-  pending:   { label: "Pending",   bg: "#fef9c3", color: "#92400e", dot: "#d97706"  },
-  suspended: { label: "Suspended", bg: "#ffe4e6", color: "#9f1239", dot: "#e11d48"  },
-};
-
 const ROLE_STYLES = {
   Owner:  { bg: "#ede9fe", color: "#7c3aed" },
   Renter: { bg: "#dbeafe", color: "#1d4ed8" },
 };
 
 const TABS = ["all", "pending", "active", "suspended"];
-
-function StatusBadge({ status }) {
-  const s = STATUS_STYLES[status] ?? STATUS_STYLES.active;
-  return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"
-      style={{ background: s.bg, color: s.color }}>
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.dot }} />
-      {s.label}
-    </span>
-  );
-}
 
 function RoleBadge({ role }) {
   const r = ROLE_STYLES[role] ?? ROLE_STYLES.Renter;
@@ -94,15 +76,6 @@ export default function AdminUsersPage() {
     acc[t] = t === "all" ? users.length : users.filter((u) => u.status === t).length;
     return acc;
   }, {});
-
-  const approve = async (id) => {
-    await approveUser(id).catch(console.error);
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "active" } : u));
-  };
-  const suspend = async (id) => {
-    await rejectUser(id, "Account suspended by admin.").catch(console.error);
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "suspended" } : u));
-  };
 
   return (
     <AdminLayout>
@@ -177,7 +150,7 @@ export default function AdminUsersPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-surface-dim">
-                  {["User", "Email", "Role", "Status", "Registered", "Actions"].map((col) => (
+                  {["User", "Email", "Role", "Registered"].map((col) => (
                     <th key={col} className="px-6 py-3 text-left font-body text-label-sm uppercase tracking-[0.05em] text-on-surface/40 font-semibold">
                       {col}
                     </th>
@@ -201,21 +174,7 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4 font-body text-body-md text-on-surface/55">{u.email}</td>
                     <td className="px-6 py-4"><RoleBadge role={u.role} /></td>
-                    <td className="px-6 py-4"><StatusBadge status={u.status} /></td>
                     <td className="px-6 py-4 font-body text-body-md text-on-surface/55">{u.dateRegistered}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {u.status === "pending" && (
-                          <ActionButton label="Approve" variant="approve" onClick={() => approve(u.id)} />
-                        )}
-                        {u.status !== "suspended" && (
-                          <ActionButton label="Suspend" variant="reject" onClick={() => suspend(u.id)} />
-                        )}
-                        {u.status === "suspended" && (
-                          <ActionButton label="Restore" variant="review" onClick={() => approve(u.id)} />
-                        )}
-                      </div>
-                    </td>
                   </motion.tr>
                 ))}
               </tbody>

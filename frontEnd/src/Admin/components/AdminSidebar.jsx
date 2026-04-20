@@ -3,7 +3,7 @@ import { LayoutGrid, Car, ClipboardList, Users, ShieldCheck, Plus } from "lucide
 
 const NAV_ITEMS = [
   { label: "Overview",         icon: LayoutGrid,    to: "/admin",               exact: true  },
-  { label: "My Cars",          icon: Car,            to: "/admin/cars",          exact: false },
+  { label: "Car Posts",        icon: Car,            to: "/admin/cars",          exact: false },
   { label: "Rental Requests",  icon: ClipboardList,  to: "/admin/rentals",       exact: false },
   { label: "Users",            icon: Users,          to: "/admin/users",         exact: false },
   { label: "Verifications",    icon: ShieldCheck,    to: "/admin/verifications", exact: false },
