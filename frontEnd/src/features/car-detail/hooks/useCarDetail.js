@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { getCarById } from '../../../services/carService';
+import { getCarById, getCarAvailability } from '../../../services/carService';
 import { createRental } from '../../../services/rentalService';
 import { getMyLicense, submitLicense, uploadLicenseImages } from '../../../services/renterService';
 import { getUser } from '../../../lib/auth';
@@ -123,6 +123,8 @@ export function useCarDetail() {
   const [isSuccess, setIsSuccess]       = useState(false);
   const [submitError, setSubmitError]   = useState('');
   const [unavailableDates, setUnavailableDates] = useState([]);
+  /** Owner-blocked + booked dates (yyyy-MM-dd) for the rental calendar. */
+  const [blockedBookingDates, setBlockedBookingDates] = useState([]);
 
   // License state
   const [hasLicense, setHasLicense]       = useState(null); // null = unknown (loading)
@@ -137,11 +139,17 @@ export function useCarDetail() {
     if (!carId) return;
     setIsLoadingCar(true);
     setCarError(null);
-    getCarById(carId)
-      .then((data) => {
+    setBlockedBookingDates([]);
+    Promise.all([getCarById(carId), getCarAvailability(carId).catch(() => null)])
+      .then(([data, avail]) => {
         const mapped = mapCar(data);
         setCar(mapped);
         setLocation(mapped.location);
+        const raw =
+          avail?.unavailable_dates ??
+          avail?.unavailableDates ??
+          [];
+        setBlockedBookingDates(Array.isArray(raw) ? raw : []);
       })
       .catch(() => setCarError('Car not found or failed to load.'))
       .finally(() => setIsLoadingCar(false));
@@ -276,7 +284,7 @@ export function useCarDetail() {
     car,
     isLoadingCar,
     carError,
-    booking: { startDate, endDate, location, ...pricing },
+    booking: { startDate, endDate, location, blockedDates: blockedBookingDates, ...pricing },
     handlers: { setStartDate, setEndDate, setLocation, handleSubmit },
     modal: {
       isOpen: modalOpen,

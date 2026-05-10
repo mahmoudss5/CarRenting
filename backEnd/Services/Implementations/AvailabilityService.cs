@@ -34,10 +34,13 @@ public class AvailabilityService : IAvailabilityService
             IsAvailable = a.IsAvailable
         }).ToList();
 
+        var mergedUnavailable = await _repo.GetUnavailableDatesForNextMonthsAsync(carPostId, 18);
+
         return ResponResult<CarAvailabilityResponseDto>.Ok(new CarAvailabilityResponseDto
         {
             PostId = carPostId,
-            Availability = availability
+            Availability = availability,
+            UnavailableDates = mergedUnavailable.Select(d => d.ToString("yyyy-MM-dd")).ToList()
         });
     }
 

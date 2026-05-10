@@ -125,28 +125,33 @@ public class AvailabilityCalendarRepository : IAvailabilityCalendarRepository
     public async Task<IEnumerable<DateOnly>> GetUnavailableDatesForNextMonthsAsync(long carPostId, int months)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var endDate = today.AddMonths(months);
+        var rangeEnd = today.AddMonths(months);
 
-        // Get all blocked dates from availability calendar
         var blockedDates = await _context.AvailabilityCalendars
             .Where(a => a.CarPostId == carPostId
                         && a.CalendarDate >= today
-                        && a.CalendarDate <= endDate
+                        && a.CalendarDate <= rangeEnd
                         && !a.IsAvailable)
             .Select(a => a.CalendarDate)
             .ToListAsync();
 
-        // Get all dates from accepted rentals
-        var acceptedRentalDates = await _context.RentalRequests
+        var rentalRanges = await _context.RentalRequests
             .Where(r => r.CarPostId == carPostId
                         && r.Status == "Accepted"
-                        && r.EndDate >= today)
-            .SelectMany(r => _context.AvailabilityCalendars
-                .Where(a => a.CalendarDate >= r.StartDate && a.CalendarDate <= r.EndDate)
-                .Select(a => a.CalendarDate))
+                        && r.EndDate >= today
+                        && r.StartDate <= rangeEnd)
+            .Select(r => new { r.StartDate, r.EndDate })
             .ToListAsync();
 
-        // Combine and return unique unavailable dates
-        return blockedDates.Union(acceptedRentalDates).Distinct().OrderBy(d => d);
+        var bookedDates = new HashSet<DateOnly>();
+        foreach (var r in rentalRanges)
+        {
+            var start = r.StartDate < today ? today : r.StartDate;
+            var end = r.EndDate > rangeEnd ? rangeEnd : r.EndDate;
+            for (var d = start; d <= end; d = d.AddDays(1))
+                bookedDates.Add(d);
+        }
+
+        return blockedDates.Union(bookedDates).Distinct().OrderBy(d => d);
     }
 }

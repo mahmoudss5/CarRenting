@@ -1,4 +1,5 @@
 import PriceBreakdown from './PriceBreakdown';
+import RentalRangeCalendar from './RentalRangeCalendar';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import { SHADOW_AMBIENT } from '../../../design/tokens';
 import { getUser } from '../../../lib/auth';
@@ -8,7 +9,7 @@ import { getUser } from '../../../lib/auth';
  * Floats via ambient shadow — not a harsh border.
  */
 export default function BookingCard({ car, booking, handlers }) {
-  const { startDate, endDate, location, total } = booking;
+  const { startDate, endDate, location, total, blockedDates = [] } = booking;
   const { setStartDate, setEndDate, setLocation, handleSubmit } = handlers;
   
   const user = getUser();
@@ -41,32 +42,15 @@ export default function BookingCard({ car, booking, handlers }) {
           <p className="font-inter text-label-sm font-bold tracking-[0.05em] uppercase text-on-surface/45 mb-3">
             Pickup &amp; Return
           </p>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label htmlFor="booking-start" className="font-inter text-label-sm tracking-[0.05em] uppercase text-on-surface/40 mb-1 block">
-                Start
-              </label>
-              <input
-                id="booking-start"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-md text-sm font-inter text-on-surface bg-surface-container-highest outline-none focus:ring-1 focus:ring-primary/20 transition-all duration-200"
-              />
-            </div>
-            <div>
-              <label htmlFor="booking-end" className="font-inter text-label-sm tracking-[0.05em] uppercase text-on-surface/40 mb-1 block">
-                End
-              </label>
-              <input
-                id="booking-end"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-md text-sm font-inter text-on-surface bg-surface-container-highest outline-none focus:ring-1 focus:ring-primary/20 transition-all duration-200"
-              />
-            </div>
-          </div>
+          <RentalRangeCalendar
+            startDate={startDate}
+            endDate={endDate}
+            unavailableDates={blockedDates}
+            onRangeChange={({ startDate: s, endDate: e }) => {
+              setStartDate(s);
+              setEndDate(e);
+            }}
+          />
         </div>
 
         {/* Location */}
@@ -93,13 +77,11 @@ export default function BookingCard({ car, booking, handlers }) {
         {/* Price breakdown */}
         <PriceBreakdown booking={booking} />
 
-        {/* CTA */}
         <PrimaryButton type="submit" size="lg" className="w-full justify-center" disabled={isOwner}>
           {isOwner ? "You own this car" : "Request Rental →"}
         </PrimaryButton>
       </form>
 
-      {/* Notice */}
       <p className="font-inter text-label-sm text-center text-on-surface/35 tracking-[0.04em] uppercase -mt-2">
         No charge until owner accepts request
       </p>
