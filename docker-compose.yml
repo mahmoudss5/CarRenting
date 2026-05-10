@@ -23,17 +23,19 @@ services:
 
   # ─── .NET 10 Web API ───────────────────────────────────────────────────────
   backend:
-    build:
-      context: ./backEnd
-      dockerfile: Dockerfile
+    image: mcr.microsoft.com/dotnet/sdk:10.0
     container_name: backend
+    working_dir: /app
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Server=database,1433;Database=CarRentalDB;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
     ports:
       - "5000:8080"
     volumes:
-      - ./backEnd/wwwroot/uploads:/app/wwwroot/uploads
+      - ./backEnd:/app
+      - backend_nuget:/root/.nuget/packages
+    command: ["dotnet", "watch", "run", "--urls", "http://+:8080", "--non-interactive"]
     depends_on:
       database:
         condition: service_healthy
@@ -42,14 +44,17 @@ services:
 
   # ─── React Frontend ────────────────────────────────────────────────────────
   frontend:
-    build:
-      context: ./frontEnd
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: http://localhost:5000   # browser-reachable backend URL
-    container_name: frontend
+    image: node:20-alpine
+    container_name: ia-frontend
+    working_dir: /app
+    environment:
+      VITE_API_URL: http://localhost:5000
     ports:
-      - "3000:3000"
+      - "3000:5173"
+    volumes:
+      - ./frontEnd:/app
+      - frontend_node_modules:/app/node_modules
+    command: ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
     depends_on:
       - backend
     networks:
@@ -57,6 +62,8 @@ services:
 
 volumes:
   sqlserver_data:
+  backend_nuget:
+  frontend_node_modules:
 
 networks:
   app-network:

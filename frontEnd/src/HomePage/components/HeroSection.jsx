@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Shield, Star, Zap } from "lucide-react";
 import PrimaryButton from "../../components/ui/PrimaryButton";
+import { getToken } from "../../lib/auth";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -16,8 +17,7 @@ function HeroBadge() {
   return (
     <motion.span
       variants={fadeUp}
-      className="inline-flex items-center gap-2 bg-white/10 text-white rounded-full px-4 py-1.5 font-body text-label-sm uppercase tracking-[0.05em] mb-8 border border-white/20 backdrop-blur-sm"
-    >
+      className="inline-flex items-center gap-2 bg-white/10 text-white rounded-full px-4 py-1.5 font-body text-label-sm uppercase tracking-[0.05em] mb-8 border border-white/20 backdrop-blur-sm">
       <Zap size={12} className="text-yellow-300" fill="currentColor" />
       Premium Mobility Platform
     </motion.span>
@@ -34,8 +34,7 @@ function TrustBadges() {
       {badges.map(({ icon: Icon, text }) => (
         <div
           key={text}
-          className="flex items-center gap-1.5 text-white/60 font-body text-label-sm"
-        >
+          className="flex items-center gap-1.5 text-white/60 font-body text-label-sm">
           <Icon size={14} className="text-white/50" />
           {text}
         </div>
@@ -45,22 +44,35 @@ function TrustBadges() {
 }
 
 function HeroCTA() {
+  const navigate = useNavigate();
+
+  const handleBrowseFleet = () => {
+    const token = getToken();
+    if (token) {
+      navigate("/renter-explore");
+    } else {
+      navigate("/signup");
+    }
+  };
+
   return (
     <motion.div
       variants={fadeUp}
-      className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-10"
-    >
-      <Link to="/signup" className="no-underline w-full sm:w-auto">
-        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-          <PrimaryButton fullWidth={false} className="px-10 py-4 text-base">
-            Browse the Fleet
-          </PrimaryButton>
-        </motion.div>
-      </Link>
+      className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-10">
+      <motion.div
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        className="w-full sm:w-auto">
+        <PrimaryButton
+          onClick={handleBrowseFleet}
+          fullWidth={false}
+          className="px-10 py-4 text-base">
+          Browse the Fleet
+        </PrimaryButton>
+      </motion.div>
       <Link
         to="/#how-it-works"
-        className="flex items-center gap-2 font-body text-title-md text-white/60 hover:text-white no-underline transition-colors group"
-      >
+        className="flex items-center gap-2 font-body text-title-md text-white/60 hover:text-white no-underline transition-colors group">
         How it Works
         <ArrowRight
           size={16}
@@ -87,21 +99,19 @@ export default function HeroSection() {
           variants={stagger}
           initial="hidden"
           animate="show"
-          className="max-w-[600px]"
-        >
+          className="max-w-[600px]">
           <HeroBadge />
           <motion.h1
             variants={fadeUp}
             className="font-display font-bold leading-[1.04] tracking-[-0.02em] text-white"
-            style={{ fontSize: "clamp(2.5rem, 5vw, 3.75rem)" }}
-          >
-            Drive the Car<br />
+            style={{ fontSize: "clamp(2.5rem, 5vw, 3.75rem)" }}>
+            Drive the Car
+            <br />
             <span style={{ color: "#7aadff" }}>You Deserve.</span>
           </motion.h1>
           <motion.p
             variants={fadeUp}
-            className="font-body text-body-md text-white/55 mt-6 max-w-[440px] leading-relaxed"
-          >
+            className="font-body text-body-md text-white/55 mt-6 max-w-[440px] leading-relaxed">
             Access a curated fleet of premium vehicles from verified local
             owners. Effortless, insured, and entirely yours.
           </motion.p>
