@@ -18,11 +18,18 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 globally: clear session and redirect to login
+// Handle 401 globally: clear session and redirect to login (but not for failed login attempts —
+// those also return 401 and must stay on the page so the form can show an error without refreshing).
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const reqUrl = error.config?.url ?? "";
+    const isFailedLogin =
+      status === 401 &&
+      (reqUrl.includes("/api/auth/login") || reqUrl.endsWith("/auth/login"));
+
+    if (status === 401 && !isFailedLogin) {
       clearAuth();
       webSocketService.disconnect();
       window.location.href = "/login";
