@@ -1,6 +1,5 @@
 using BackEnd.Models;
 using Microsoft.EntityFrameworkCore;
-
 namespace BackEnd.Data;
 
 public static class DbSeeder

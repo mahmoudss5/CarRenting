@@ -30,6 +30,7 @@ function mergeCarData(summary) {
       const approval = (summary.approval_status ?? "").toLowerCase();
       const rental = (summary.rental_status ?? "").toLowerCase();
       if (approval === "pending") return "Pending";
+      if (approval === "rejected") return "Rejected";
       if (rental === "rented") return "Rented";
       return "Active";
     })(),
@@ -90,8 +91,9 @@ export default function useOwnerHome() {
   const stats = useMemo(() => {
     const active = posts.filter((p) => p.ownerRentalStatus === "Active").length;
     const pending = posts.filter((p) => p.ownerRentalStatus === "Pending").length;
+    const rejected = posts.filter((p) => p.ownerRentalStatus === "Rejected").length;
     const rented = posts.filter((p) => p.ownerRentalStatus === "Rented").length;
-    return { totalPosts: posts.length, active, pending, rented };
+    return { totalPosts: posts.length, active, pending, rejected, rented };
   }, [posts]);
 
   return { posts, stats, isLoading, error, deletingId, deletePost, refetch: fetchPosts };
