@@ -3,17 +3,39 @@ import { getMe } from '../../../services/authService';
 import { getMyRentals } from '../../../services/rentalService';
 import { submitLicense, uploadLicenseImages, getMyLicense } from '../../../services/renterService';
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
+
+function normalizeImageUrl(url) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  return url.startsWith('/') ? `${API_BASE_URL}${url}` : `${API_BASE_URL}/${url}`;
+}
+
+/** True when a sessionStorage pending row is the same rental as an API row (by id or legacy trip match). */
+function sessionRowMatchesApiRental(sp, r) {
+  if (sp.requestId != null && String(sp.requestId) !== '') {
+    return String(r.requestId) === String(sp.requestId);
+  }
+  const norm = (d) => (d ?? '').toString().slice(0, 10);
+  const sameDates =
+    norm(r.startDate) === norm(sp.startDate) && norm(r.endDate) === norm(sp.endDate);
+  const rName = (r.car?.name ?? '').trim().toLowerCase();
+  const spName = (sp.car?.name ?? '').trim().toLowerCase();
+  return sameDates && rName !== '' && rName === spName;
+}
+
 /** Map a backend rental to the dashboard booking shape. */
 function mapRental(r) {
   const status = (r.status || '').toLowerCase();
+  const imageUrl = r.carPrimaryImageUrl || r.car_primary_image_url;
   return {
     id: `DS-${r.requestId || r.request_id}`,
     requestId: r.requestId || r.request_id,
     status,
     car: {
       name: r.carTitle || r.car_title || "Unknown Car",
-      postId: r.carPostId || r.car_post_id || null,   // needed for review submission
-      image: null,
+      postId: r.carPostId || r.car_post_id || null,
+      image: normalizeImageUrl(imageUrl),
       pricePerDay: null,
     },
     startDate: r.startDate || r.start_date,
@@ -88,8 +110,10 @@ export function useDashboard() {
 
   const pendingBookings = useMemo(() => {
     const apiPending = allRentals.filter((b) => b.status === 'pending');
+    // Drop session ghosts whenever the API already has that rental (any status), so accepted trips
+    // do not stay under "Pending Approval". Legacy rows without requestId match by dates + car name.
     const sessionOnly = sessionPending.filter(
-      (sp) => !apiPending.some((ap) => String(ap.requestId) === String(sp.requestId)),
+      (sp) => !allRentals.some((r) => sessionRowMatchesApiRental(sp, r)),
     );
     if (activeTab === 'all' || activeTab === 'pending') {
       return [...apiPending, ...sessionOnly];

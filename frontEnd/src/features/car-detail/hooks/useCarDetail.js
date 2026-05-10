@@ -122,6 +122,7 @@ export function useCarDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess]       = useState(false);
   const [submitError, setSubmitError]   = useState('');
+  const [unavailableDates, setUnavailableDates] = useState([]);
 
   // License state
   const [hasLicense, setHasLicense]       = useState(null); // null = unknown (loading)
@@ -186,6 +187,7 @@ export function useCarDetail() {
       return;
     }
     setSubmitError('');
+    setUnavailableDates([]);
     setIsSuccess(false);
     setLicenseFront(null);
     setLicenseBack(null);
@@ -226,13 +228,19 @@ export function useCarDetail() {
       }
 
       // Step 2 — create the rental request
-      await createRental({ postId: car.id, startDate, endDate });
+      const created = await createRental({ postId: car.id, startDate, endDate });
 
       setIsSuccess(true);
 
+      const requestId =
+        created?.rental?.requestId ??
+        created?.rental?.request_id ??
+        created?.Rental?.RequestId;
+
       const pending = JSON.parse(sessionStorage.getItem('ds_pending_rentals') || '[]');
       pending.unshift({
-        id: `DS-${Date.now().toString().slice(-5)}`,
+        id: requestId != null ? `DS-${requestId}` : `DS-${Date.now().toString().slice(-5)}`,
+        requestId: requestId ?? undefined,
         status: 'pending',
         car: { name: car.name, image: car.primaryImageUrl ?? null, pricePerDay: car.pricePerDay },
         startDate,
@@ -247,6 +255,10 @@ export function useCarDetail() {
         err?.response?.data?.message ??
         err?.response?.data?.error ??
         'Failed to submit rental request. Please try again.';
+      const extraData = err?.response?.data?.extraData;
+      if (extraData?.unavailableDates) {
+        setUnavailableDates(extraData.unavailableDates);
+      }
       setSubmitError(msg);
     } finally {
       setIsSubmitting(false);
@@ -271,6 +283,7 @@ export function useCarDetail() {
       isSubmitting,
       isSuccess,
       submitError,
+      unavailableDates,
       hasLicense,
       // Existing-license image upload
       licenseFront,

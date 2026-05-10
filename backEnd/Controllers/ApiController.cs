@@ -15,6 +15,7 @@ public abstract class ApiController : ControllerBase
         if (result.Success)
             return StatusCode(result.StatusCode, result.Data);
 
-        return StatusCode(result.StatusCode, new { error = result.Error });
+        var response = new { error = result.Error, extraData = result.ExtraData };
+        return StatusCode(result.StatusCode, response);
     }
 }

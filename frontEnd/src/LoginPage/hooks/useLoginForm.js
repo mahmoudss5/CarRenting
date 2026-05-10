@@ -42,13 +42,17 @@ export function useLoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
     const validationErrors = validate(values);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      return;
+      return false;
     }
 
     setIsLoading(true);
+    setServerError("");
+
     try {
       const data = await login({ email: values.email, password: values.password });
       saveAuth(data.token, data.user);
@@ -59,9 +63,12 @@ export function useLoginForm() {
         err?.response?.data?.error ??
         "Invalid email or password.";
       setServerError(msg);
+      return false;
     } finally {
       setIsLoading(false);
     }
+
+    return false;
   };
 
   return { values, errors, isLoading, serverError, handleChange, handleSubmit };

@@ -22,7 +22,7 @@ public class RentalRequestRepository : IRentalRequestRepository
 
     public async Task<IEnumerable<RentalRequest>> GetByRenterIdAsync(long renterId) =>
         await _context.RentalRequests
-            .Include(r => r.CarPost)
+            .Include(r => r.CarPost).ThenInclude(c => c.CarImages)
             .Where(r => r.RenterId == renterId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
@@ -31,7 +31,7 @@ public class RentalRequestRepository : IRentalRequestRepository
         await _context.RentalRequests
             .Include(r => r.Renter).ThenInclude(r => r.User)
             .Include(r => r.Renter).ThenInclude(r => r.DriverLicense)
-            .Include(r => r.CarPost)
+            .Include(r => r.CarPost).ThenInclude(c => c.CarImages)
             .Where(r => r.CarPost.OwnerId == carOwnerId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();

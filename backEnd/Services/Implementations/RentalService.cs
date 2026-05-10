@@ -50,12 +50,25 @@ public class RentalService : IRentalService
             return ResponResult<RentalCreatedResponseDto>.Fail("End date must be after start date.");
 
         var ownerBlocked = await _availability.HasBlockedDatesAsync(dto.PostId, dto.StartDate, dto.EndDate);
+
         if (ownerBlocked)
-            return ResponResult<RentalCreatedResponseDto>.Fail("One or more of the selected dates are marked as unavailable by the owner.");
+        {
+            var unavailableDates = await _availability.GetUnavailableDatesForNextMonthsAsync(dto.PostId, 3);
+            return ResponResult<RentalCreatedResponseDto>.Fail(
+                "One or more of the selected dates are marked as unavailable by the owner.",
+                400,
+                new { unavailableDates = unavailableDates.Select(d => d.ToString("yyyy-MM-dd")) });
+        }
 
         var rentalConflict = await _rentals.HasConflictAsync(dto.PostId, dto.StartDate, dto.EndDate);
         if (rentalConflict)
-            return ResponResult<RentalCreatedResponseDto>.Fail("The car is already booked for one or more of the selected dates.");
+        {
+            var unavailableDates = await _availability.GetUnavailableDatesForNextMonthsAsync(dto.PostId, 3);
+            return ResponResult<RentalCreatedResponseDto>.Fail(
+                "The car is already booked for one or more of the selected dates.",
+                400,
+                new { unavailableDates = unavailableDates.Select(d => d.ToString("yyyy-MM-dd")) });
+        }
 
         var totalDays = (short)(dto.EndDate.DayNumber - dto.StartDate.DayNumber + 1);
         var totalPrice = car.PricePerDay * totalDays;
@@ -109,6 +122,8 @@ public class RentalService : IRentalService
             RequestId = r.Id,
             CarPostId = r.CarPostId,
             CarTitle = r.CarPost.Title,
+            CarPrimaryImageUrl = r.CarPost.CarImages.FirstOrDefault(i => i.IsPrimary)?.ImageUrl
+                ?? r.CarPost.CarImages.FirstOrDefault()?.ImageUrl,
             StartDate = r.StartDate,
             EndDate = r.EndDate,
             TotalPrice = r.TotalPrice,

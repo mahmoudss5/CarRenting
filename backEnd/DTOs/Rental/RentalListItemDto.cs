@@ -5,6 +5,7 @@ public class RentalListItemDto
     public long RequestId { get; set; }
     public long CarPostId { get; set; }
     public string CarTitle { get; set; } = null!;
+    public string? CarPrimaryImageUrl { get; set; }
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
     public decimal TotalPrice { get; set; }

@@ -121,4 +121,32 @@ public class AvailabilityCalendarRepository : IAvailabilityCalendarRepository
 
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<DateOnly>> GetUnavailableDatesForNextMonthsAsync(long carPostId, int months)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var endDate = today.AddMonths(months);
+
+        // Get all blocked dates from availability calendar
+        var blockedDates = await _context.AvailabilityCalendars
+            .Where(a => a.CarPostId == carPostId
+                        && a.CalendarDate >= today
+                        && a.CalendarDate <= endDate
+                        && !a.IsAvailable)
+            .Select(a => a.CalendarDate)
+            .ToListAsync();
+
+        // Get all dates from accepted rentals
+        var acceptedRentalDates = await _context.RentalRequests
+            .Where(r => r.CarPostId == carPostId
+                        && r.Status == "Accepted"
+                        && r.EndDate >= today)
+            .SelectMany(r => _context.AvailabilityCalendars
+                .Where(a => a.CalendarDate >= r.StartDate && a.CalendarDate <= r.EndDate)
+                .Select(a => a.CalendarDate))
+            .ToListAsync();
+
+        // Combine and return unique unavailable dates
+        return blockedDates.Union(acceptedRentalDates).Distinct().OrderBy(d => d);
+    }
 }

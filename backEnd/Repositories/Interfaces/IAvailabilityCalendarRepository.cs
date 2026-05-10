@@ -11,4 +11,5 @@ public interface IAvailabilityCalendarRepository
     Task<bool> HasUnavailableDateInRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate);
     Task BlockDatesRangeAsync(long carPostId, DateOnly startDate, DateOnly endDate);
     Task UnblockDatesRangeIfNoAcceptedRentalsAsync(long carPostId, DateOnly startDate, DateOnly endDate, long excludeRentalRequestId);
+    Task<IEnumerable<DateOnly>> GetUnavailableDatesForNextMonthsAsync(long carPostId, int months);
 }
