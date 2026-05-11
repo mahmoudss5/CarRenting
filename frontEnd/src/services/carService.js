@@ -23,10 +23,11 @@ export async function searchCars({ type, brand, location, minPrice, maxPrice, pa
       type,
       brand,
       location,
-      min_price: minPrice,
-      max_price: maxPrice,
+      // Query binding uses property names (camelCase maps to C# MinPrice/MaxPrice/PageSize).
+      minPrice,
+      maxPrice,
       page,
-      page_size: pageSize,
+      pageSize,
     },
   });
   return data;

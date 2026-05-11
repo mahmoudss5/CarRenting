@@ -1,7 +1,22 @@
 const AUTH_KEY = "ds_auth";
 
+
+
+export function isAuth() {
+  return sessionStorage.getItem(AUTH_KEY) !== null;
+}
+
 export function saveAuth(token, user) {
   sessionStorage.setItem(AUTH_KEY, JSON.stringify({ token, user }));
+  saveRole(user);
+}
+
+export function saveRole(user) {
+  sessionStorage.setItem("role", user.role);
+}
+
+export function getRole() {
+  return sessionStorage.getItem("role");
 }
 
 export function getToken() {

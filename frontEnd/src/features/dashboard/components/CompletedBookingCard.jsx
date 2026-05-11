@@ -43,11 +43,7 @@ function UnratedFooter({ onRate }) {
   );
 }
 
-/**
- * Completed booking card — context-aware footer (rated vs unrated).
- * Unrated cards open a FeedbackModal on "Rate this Experience".
- * On submit, the review is persisted to the backend via POST /api/reviews.
- */
+
 export default function CompletedBookingCard({ booking }) {
   const [modalOpen, setModalOpen]   = useState(false);
   const [localRating, setLocalRating] = useState(booking.hasRating ? booking.rating : null);

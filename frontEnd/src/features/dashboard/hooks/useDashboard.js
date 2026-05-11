@@ -97,13 +97,25 @@ export function useDashboard() {
   }, []);
 
   const filteredBookings = useMemo(() => {
-    const STATUS_MAP = { accepted: 'upcoming', completed: 'completed', cancelled: 'cancelled', rented: 'rented' };
+    const now = new Date();
+    const isRentalEnded = (b) => {
+      if (b.status !== 'rented') return false;
+      const endDate = new Date(b.endDate);
+      return endDate < now;
+    };
+
     return allRentals
+      .map((b) => ({
+        ...b,
+        isEnded: isRentalEnded(b),
+      }))
       .filter((b) => {
         if (activeTab === 'all') return b.status !== 'pending';
         if (activeTab === 'pending') return false;
-        if (activeTab === 'upcoming') return ['accepted', 'rented', 'upcoming'].includes(b.status);
-        if (activeTab === 'completed') return b.status === 'completed';
+        if (activeTab === 'upcoming') {
+          return ['accepted', 'upcoming'].includes(b.status) || (b.status === 'rented' && !b.isEnded);
+        }
+        if (activeTab === 'completed') return b.status === 'completed' || b.isEnded;
         return true;
       });
   }, [allRentals, activeTab]);
@@ -121,8 +133,10 @@ export function useDashboard() {
     return [];
   }, [allRentals, sessionPending, activeTab]);
 
-  const activeBooking = filteredBookings.find((b) => ['rented', 'accepted', 'upcoming'].includes(b.status)) ?? null;
-  const completedBookings = filteredBookings.filter((b) => b.status === 'completed');
+  const activeBooking = filteredBookings.find((b) =>
+    ['accepted', 'upcoming'].includes(b.status) || (b.status === 'rented' && !b.isEnded)
+  ) ?? null;
+  const completedBookings = filteredBookings.filter((b) => b.status === 'completed' || b.isEnded);
 
   const handleSubmitLicense = async (e) => {
     e.preventDefault();

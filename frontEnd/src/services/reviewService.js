@@ -1,10 +1,6 @@
 import apiClient from "../lib/apiClient";
 
-/**
- * POST /api/reviews  [Requires Auth: Renter]
- * Create a review for a completed rental.
- * Body: { request_id, post_id, rating (1-5), feedback? }
- */
+
 export async function createReview({ requestId, postId, rating, feedback }) {
   const { data } = await apiClient.post("/api/reviews", {
     request_id: requestId,
@@ -13,26 +9,18 @@ export async function createReview({ requestId, postId, rating, feedback }) {
     feedback,
   });
   return data;
-  // { message, review: { review_id, post_id, renter_name, rating, feedback, created_at } }
 }
 
-/**
- * DELETE /api/reviews/:id  [Requires Auth: Admin]
- * Delete a review by ID.
- */
+
 export async function deleteReview(id) {
   const { data } = await apiClient.delete(`/api/reviews/${id}`);
   return data;
 }
 
-/**
- * GET /api/reviews/my  [Requires Auth: Renter]
- * Get reviews written by the logged-in renter.
- */
+
 export async function getMyReviews() {
   const { data } = await apiClient.get("/api/reviews/my");
   return data;
-  // [{ review_id, car_title, rating, feedback, created_at }]
 }
 
 /**

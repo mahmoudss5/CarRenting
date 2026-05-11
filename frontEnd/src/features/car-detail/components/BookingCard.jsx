@@ -3,7 +3,7 @@ import RentalRangeCalendar from './RentalRangeCalendar';
 import PrimaryButton from '../../../shared/components/PrimaryButton';
 import { SHADOW_AMBIENT } from '../../../design/tokens';
 import { getUser } from '../../../lib/auth';
-
+import { isAuth } from '../../../lib/auth';
 /**
  * Sticky right-column booking card.
  * Floats via ambient shadow — not a harsh border.
@@ -11,8 +11,8 @@ import { getUser } from '../../../lib/auth';
 export default function BookingCard({ car, booking, handlers }) {
   const { startDate, endDate, location, total, blockedDates = [] } = booking;
   const { setStartDate, setEndDate, setLocation, handleSubmit } = handlers;
-  
-  const user = getUser();
+  const isAuthenticated = isAuth();
+   const user = getUser();
   const isOwner = user && String(user.nameid) === String(car.owner?.userId);
 
   return (
@@ -77,9 +77,17 @@ export default function BookingCard({ car, booking, handlers }) {
         {/* Price breakdown */}
         <PriceBreakdown booking={booking} />
 
+          {!isAuthenticated && (
+              <p className="font-inter text-label-lg font-bold text-red-500 text-center">
+                Please login to request rental
+              </p>
+          )}
+
+          {isAuthenticated && (
         <PrimaryButton type="submit" size="lg" className="w-full justify-center" disabled={isOwner}>
           {isOwner ? "You own this car" : "Request Rental →"}
         </PrimaryButton>
+          )}
       </form>
 
       <p className="font-inter text-label-sm text-center text-on-surface/35 tracking-[0.04em] uppercase -mt-2">
