@@ -10,5 +10,6 @@ public class RentalListItemDto
     public DateOnly EndDate { get; set; }
     public decimal TotalPrice { get; set; }
     public string Status { get; set; } = null!;
+    public string? RejectionReason { get; set; }
     public DateTime RequestedAt { get; set; }
 }

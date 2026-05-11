@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getCarById, getCarAvailability } from '../../../services/carService';
 import { createRental } from '../../../services/rentalService';
 import { getMyLicense, submitLicense, uploadLicenseImages } from '../../../services/renterService';
+import { getCarReviews } from '../../../services/reviewService';
 import { getUser } from '../../../lib/auth';
 
 const API_BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000').replace(/\/+$/, '');
@@ -55,17 +56,19 @@ function pickGalleryImages(images = []) {
 }
 
 /** Map a backend car detail response to the UI shape. */
-function mapCar(c) {
-  const reviewList = (c.reviews ?? []).map((r) => ({
-    renterName: r.renter_name,
+function mapCar(c, reviewsRes = { reviews: [], average_rating: 0, total: 0 }) {
+  // Map reviews from the reviews API to the format expected by ReviewCard
+  const reviewList = (reviewsRes.reviews ?? []).map((r) => ({
+    id: r.review_id,
+    author: r.renter_name,
+    initials: buildInitials(r.renter_name),
     rating: r.rating,
-    feedback: r.feedback,
-    createdAt: r.created_at,
+    text: r.feedback,
+    date: r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
   }));
-  const avgRating =
-    reviewList.length > 0
-      ? Math.round((reviewList.reduce((s, r) => s + r.rating, 0) / reviewList.length) * 10) / 10
-      : 0;
+
+  const avgRating = reviewsRes.average_rating ?? 0;
+  const reviewCount = reviewsRes.total ?? reviewList.length;
 
   const gallery = pickGalleryImages(c.images ?? []);
 
@@ -87,7 +90,7 @@ function mapCar(c) {
     availability: c.availability ?? [],
     reviews: reviewList,
     avgRating,
-    reviewCount: reviewList.length,
+    reviewCount,
     images: {
       main: gallery.main,
       side1: gallery.side1,
@@ -99,7 +102,7 @@ function mapCar(c) {
       name: c.owner_name ?? '—',
       initials: buildInitials(c.owner_name),
       rating: avgRating > 0 ? avgRating : '—',
-      reviews: reviewList.length,
+      reviews: reviewCount,
     },
   };
 }
@@ -110,6 +113,7 @@ export function useCarDetail() {
   const [car, setCar] = useState(null);
   const [isLoadingCar, setIsLoadingCar] = useState(true);
   const [carError, setCarError] = useState(null);
+  const [reviewsData, setReviewsData] = useState({ reviews: [], average_rating: 0, total: 0 });
 
   const defaultStart = today();
   const defaultEnd   = plusDays(defaultStart, 3);
@@ -134,15 +138,20 @@ export function useCarDetail() {
   const [issuingCountry, setIssuingCountry] = useState('');
   const [expiryDate, setExpiryDate]       = useState('');
 
-  // Load car data
+  // Load car data and reviews
   useEffect(() => {
     if (!carId) return;
     setIsLoadingCar(true);
     setCarError(null);
     setBlockedBookingDates([]);
-    Promise.all([getCarById(carId), getCarAvailability(carId).catch(() => null)])
-      .then(([data, avail]) => {
-        const mapped = mapCar(data);
+    Promise.all([
+      getCarById(carId),
+      getCarAvailability(carId).catch(() => null),
+      getCarReviews(carId).catch(() => ({ reviews: [], average_rating: 0, total: 0 })),
+    ])
+      .then(([data, avail, reviewsRes]) => {
+        setReviewsData(reviewsRes);
+        const mapped = mapCar(data, reviewsRes);
         setCar(mapped);
         setLocation(mapped.location);
         const raw =

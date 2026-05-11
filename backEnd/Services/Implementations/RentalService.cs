@@ -128,6 +128,7 @@ public class RentalService : IRentalService
             EndDate = r.EndDate,
             TotalPrice = r.TotalPrice,
             Status = r.Status,
+            RejectionReason = r.RejectionReason,
             RequestedAt = r.CreatedAt
         });
 

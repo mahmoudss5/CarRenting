@@ -36,8 +36,15 @@ public class ReviewService : IReviewService
         if (rental.RenterId != renter.Id)
             return ResponResult<ReviewCreatedResponseDto>.Forbidden("You can only review your own rentals.");
 
-        if (rental.Status != "Completed")
-            return ResponResult<ReviewCreatedResponseDto>.Forbidden("You can only review after the rental is completed.");
+        var todayUtc = DateOnly.FromDateTime(DateTime.UtcNow);
+        var rentalPeriodEnded = rental.EndDate < todayUtc;
+        var canReview =
+            rental.Status == "Completed"
+            || (rental.Status == "Accepted" && rentalPeriodEnded);
+
+        if (!canReview)
+            return ResponResult<ReviewCreatedResponseDto>.Forbidden(
+                "You can only review after the rental period has ended or the trip is marked completed.");
 
         if (await _reviews.ExistsForRentalAsync(dto.RequestId))
             return ResponResult<ReviewCreatedResponseDto>.Fail("A review already exists for this rental.");
@@ -126,7 +133,9 @@ public class ReviewService : IReviewService
         var reviews = await _reviews.GetTopReviewsAsync(carPostId, count);
         var items = reviews.Select(r => new CarReviewItemDto
         {
-            RenterName = $"{r.Reviewer.FirstName} {r.Reviewer.LastName}".Trim(),
+            RenterName = r.Reviewer is null
+                ? "Renter"
+                : $"{r.Reviewer.FirstName} {r.Reviewer.LastName}".Trim(),
             Rating     = r.Rating,
             Feedback   = r.Comment,
             CreatedAt  = r.CreatedAt
@@ -144,7 +153,7 @@ public class ReviewService : IReviewService
         var items = reviews.Select(r => new RenterReviewItemDto
         {
             ReviewId  = r.Id,
-            CarTitle  = r.CarPost.Title,
+            CarTitle  = r.CarPost?.Title ?? "Unknown",
             Rating    = r.Rating,
             Feedback  = r.Comment,
             CreatedAt = r.CreatedAt
@@ -159,7 +168,7 @@ public class ReviewService : IReviewService
         var items = reviews.Select(r => new RenterReviewItemDto
         {
             ReviewId  = r.Id,
-            CarTitle  = r.CarPost.Title,
+            CarTitle  = r.CarPost?.Title ?? "Unknown",
             Rating    = r.Rating,
             Feedback  = r.Comment,
             CreatedAt = r.CreatedAt

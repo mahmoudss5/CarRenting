@@ -14,9 +14,10 @@ export default function RenterDashboardPage() {
     isLoading,
     activeTab,
     setActiveTab,
-    activeBooking,
+    activeBookings,
     completedBookings,
     pendingBookings,
+    rejectedBookings,
   } = useDashboard();
 
   return (
@@ -35,9 +36,10 @@ export default function RenterDashboardPage() {
             <BookingsGrid
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              activeBooking={activeBooking}
+              activeBookings={activeBookings}
               completedBookings={completedBookings}
               pendingBookings={pendingBookings}
+              rejectedBookings={rejectedBookings}
             />
           </div>
         )}

@@ -45,10 +45,21 @@ function mapRental(r) {
     submittedAt: (r.requestedAt || r.requested_at)
       ? new Date(r.requestedAt || r.requested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       : '',
+    rejectionReason: r.rejectionReason || r.rejection_reason || '',
     location: '',
     pickup: { date: r.startDate || r.start_date, time: '' },
     dropoff: { date: r.endDate || r.end_date, time: '' },
+    dates: formatBookingDates(r.startDate || r.start_date, r.endDate || r.end_date),
   };
+}
+
+function formatBookingDates(start, end) {
+  const a = (start ?? '').toString().slice(0, 10);
+  const b = (end ?? '').toString().slice(0, 10);
+  if (!a && !b) return '';
+  if (!a) return b;
+  if (!b) return a;
+  return `${a} → ${b}`;
 }
 
 export function useDashboard() {
@@ -79,7 +90,10 @@ export function useDashboard() {
             : '??',
           tier: 'Renter',
           tierVariant: 'electric',
-          stats: { totalTrips: 0, joinDate: new Date(meData.created_at).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) },
+          stats: {
+            totalTrips: 0,
+            joinDate: new Date(meData.created_at).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+          },
           licenseStatus: licenseData?.verification_status?.toLowerCase() ?? 'none',
         });
         setAllRentals(Array.isArray(rentalsData) ? rentalsData.map(mapRental) : []);
@@ -96,29 +110,35 @@ export function useDashboard() {
     } catch { return []; }
   }, []);
 
-  const filteredBookings = useMemo(() => {
+  /** Past end date → treat as completed history (backend keeps status "Accepted" until owner completes). */
+  const bookingsWithEndedFlag = useMemo(() => {
     const now = new Date();
-    const isRentalEnded = (b) => {
-      if (b.status !== 'rented') return false;
+    return allRentals.map((b) => {
       const endDate = new Date(b.endDate);
-      return endDate < now;
-    };
+      const endValid = !Number.isNaN(endDate.getTime());
+      const pastEnd = endValid && endDate < now;
+      const isEnded =
+        b.status === 'completed' ||
+        (pastEnd && (b.status === 'accepted' || b.status === 'rented'));
+      return { ...b, isEnded };
+    });
+  }, [allRentals]);
 
-    return allRentals
-      .map((b) => ({
-        ...b,
-        isEnded: isRentalEnded(b),
-      }))
-      .filter((b) => {
-        if (activeTab === 'all') return b.status !== 'pending';
-        if (activeTab === 'pending') return false;
-        if (activeTab === 'upcoming') {
-          return ['accepted', 'upcoming'].includes(b.status) || (b.status === 'rented' && !b.isEnded);
-        }
-        if (activeTab === 'completed') return b.status === 'completed' || b.isEnded;
-        return true;
-      });
-  }, [allRentals, activeTab]);
+  const filteredBookings = useMemo(() => {
+    return bookingsWithEndedFlag.filter((b) => {
+      if (activeTab === 'all') return b.status !== 'pending';
+      if (activeTab === 'pending') return false;
+      if (activeTab === 'upcoming') {
+        return (
+          (['accepted', 'upcoming'].includes(b.status) || b.status === 'rented') &&
+          !b.isEnded
+        );
+      }
+      if (activeTab === 'completed') return b.status === 'completed' || b.isEnded;
+      if (activeTab === 'rejected') return b.status === 'rejected';
+      return true;
+    });
+  }, [bookingsWithEndedFlag, activeTab]);
 
   const pendingBookings = useMemo(() => {
     const apiPending = allRentals.filter((b) => b.status === 'pending');
@@ -133,10 +153,40 @@ export function useDashboard() {
     return [];
   }, [allRentals, sessionPending, activeTab]);
 
-  const activeBooking = filteredBookings.find((b) =>
-    ['accepted', 'upcoming'].includes(b.status) || (b.status === 'rented' && !b.isEnded)
-  ) ?? null;
-  const completedBookings = filteredBookings.filter((b) => b.status === 'completed' || b.isEnded);
+  /** Owner-declined requests (shown under All Bookings). */
+  const rejectedBookings = useMemo(
+    () => allRentals.filter((b) => b.status === 'rejected'),
+    [allRentals],
+  );
+
+  /** Trips that were approved: ongoing (accepted) or finished (completed). */
+  const acceptedTripCount = useMemo(
+    () => allRentals.filter((b) => b.status === 'accepted' || b.status === 'completed').length,
+    [allRentals],
+  );
+
+  const userWithTripStats = useMemo(() => {
+    if (!user) return null;
+    return {
+      ...user,
+      stats: { ...user.stats, totalTrips: acceptedTripCount },
+    };
+  }, [user, acceptedTripCount]);
+
+  const activeBookings = useMemo(
+    () =>
+      filteredBookings.filter(
+        (b) =>
+          (['accepted', 'upcoming'].includes(b.status) || b.status === 'rented') &&
+          !b.isEnded,
+      ),
+    [filteredBookings],
+  );
+
+  const completedBookings = useMemo(
+    () => filteredBookings.filter((b) => b.status === 'completed' || b.isEnded),
+    [filteredBookings],
+  );
 
   const handleSubmitLicense = async (e) => {
     e.preventDefault();
@@ -162,14 +212,15 @@ export function useDashboard() {
   };
 
   return {
-    user,
+    user: userWithTripStats,
     isLoading,
     licenseStatus,
     activeTab,
     setActiveTab,
-    activeBooking,
+    activeBookings,
     completedBookings,
     pendingBookings,
+    rejectedBookings,
     licenseForm: { licenseNumber, issuingCountry, expiryDate, licenseFront, licenseBack },
     setLicenseNumber,
     setIssuingCountry,

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { GRADIENT_PRIMARY, SHADOW_BUTTON, SHADOW_BUTTON_HOVER } from '../../../design/tokens';
 
 /**
  * FeedbackModal — lets the user submit a star rating + optional comment
@@ -155,14 +156,20 @@ export default function FeedbackModal({ booking, onClose, onSubmit }) {
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleSubmit}
                   disabled={rating === 0}
-                  className="flex-1 rounded-xl font-inter font-semibold text-sm text-white py-2.5 transition-all duration-150"
+                  className="flex-1 rounded-xl font-inter font-semibold text-sm text-white py-2.5 transition-all duration-150 disabled:cursor-not-allowed"
                   style={{
-                    background: rating === 0
-                      ? 'rgba(0,0,0,0.20)'
-                      : 'var(--color-primary)',
+                    background: rating === 0 ? '#94a3b8' : GRADIENT_PRIMARY,
+                    boxShadow: rating === 0 ? 'none' : SHADOW_BUTTON,
                     cursor: rating === 0 ? 'not-allowed' : 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (rating > 0) e.currentTarget.style.boxShadow = SHADOW_BUTTON_HOVER;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (rating > 0) e.currentTarget.style.boxShadow = SHADOW_BUTTON;
                   }}
                 >
                   Submit Feedback
@@ -185,9 +192,16 @@ export default function FeedbackModal({ booking, onClose, onSubmit }) {
                 Your feedback has been submitted successfully.
               </p>
               <button
+                type="button"
                 onClick={onClose}
-                className="rounded-xl font-inter font-semibold text-sm text-white px-8 py-2.5 transition-colors duration-150"
-                style={{ background: 'var(--color-primary)' }}
+                className="rounded-xl font-inter font-semibold text-sm text-white px-8 py-2.5 transition-all duration-150"
+                style={{ background: GRADIENT_PRIMARY, boxShadow: SHADOW_BUTTON }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = SHADOW_BUTTON_HOVER;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = SHADOW_BUTTON;
+                }}
               >
                 Close
               </button>

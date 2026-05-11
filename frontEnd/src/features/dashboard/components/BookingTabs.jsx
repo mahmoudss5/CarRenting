@@ -3,14 +3,15 @@ const TABS = [
   { id: 'pending',   label: 'Pending'      },
   { id: 'upcoming',  label: 'Upcoming'     },
   { id: 'completed', label: 'Completed'    },
+  { id: 'rejected',  label: 'Rejected'     },
 ];
 
 /**
  * Underline-style tab navigation with an optional badge on Pending.
  */
-export default function BookingTabs({ activeTab, onTabChange, pendingCount = 0 }) {
+export default function BookingTabs({ activeTab, onTabChange, pendingCount = 0, rejectedCount = 0 }) {
   return (
-    <div className="flex gap-8 mb-8 border-b border-outline-variant/20">
+    <div className="flex flex-wrap gap-x-6 gap-y-2 mb-8 border-b border-outline-variant/20">
       {TABS.map((tab) => (
         <button
           key={tab.id}
@@ -27,6 +28,13 @@ export default function BookingTabs({ activeTab, onTabChange, pendingCount = 0 }
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[0.6rem] font-bold text-white"
               style={{ background: '#d97706' }}>
               {pendingCount}
+            </span>
+          )}
+          {tab.id === 'rejected' && rejectedCount > 0 && (
+            <span
+              className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-[0.6rem] font-bold text-white bg-red-600"
+            >
+              {rejectedCount}
             </span>
           )}
         </button>

@@ -70,8 +70,8 @@ public class ReviewRepository : IReviewRepository
 
     public async Task<List<Review>> GetTopReviewsAsync(long carPostId, int count)
     {
-        // here we get the first count reviews with the highest rating
         return await _context.Reviews
+            .Include(r => r.Reviewer)
             .Where(r => r.CarPostId == carPostId)
             .OrderByDescending(r => r.Rating)
             .Take(count)
@@ -80,15 +80,18 @@ public class ReviewRepository : IReviewRepository
 
     public async Task<List<Review>> GetAllReviewsAsync(long carPostId)
     {
-        //fetching all reviews in dataBase for a specific car
-        
-        var res= await _context.Reviews.Where(r => r.CarPostId == carPostId).ToListAsync();
-        return res;
+        return await _context.Reviews
+            .Include(r => r.CarPost)
+            .Where(r => r.CarPostId == carPostId)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
     }
 
     public async Task<List<Review>> GetAllReviews()
     {
-        var res= await _context.Reviews.ToListAsync();
-        return res;
+        return await _context.Reviews
+            .Include(r => r.CarPost)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
     }
 }
